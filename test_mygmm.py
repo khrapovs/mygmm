@@ -3,7 +3,7 @@
 # sys.path.append("~/Dropbox/Computation/Python/MyGMM")
 
 import numpy as np
-from gmm import gmmest, results
+from gmm import GMM
 import pandas as pd
 
 def ivmoment(theta, data, options):
@@ -73,10 +73,12 @@ def test_mygmm():
                'bounds' : None,
                'band' : int(data['T']**(1/3))}
     
+    # Initialize GMM object
+    gmm = GMM(beta*2, data, options)
     # Estimate model with GMM
-    gmm = gmmest(beta*2, data, options)
+    gmm.gmmest()
     # Print results
-    results(gmm, data, options)
+    gmm.results()
     
     # Compare with OLS
     Xps = pd.DataFrame(X)

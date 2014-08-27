@@ -32,7 +32,7 @@ def ivmoment(theta, data, options):
     
     return g, dg
 
-def test_mygmm():
+def generate_data():
     # Number of observations
     T = 1e6
     # Correlation
@@ -59,9 +59,14 @@ def test_mygmm():
     data = {'T' : Y.shape[0], 'q' : Z.shape[1], 'k' : beta.shape[0],
             'Y' : Y, 'X' : X, 'Z' : Z}
     
+    return data, beta
+    
+def test_mygmm():
+    
+    data, theta_true = generate_data()
     # Initialize options for GMM
     options = {'moment' : ivmoment,
-               'W' : np.eye(Z.shape[1]),
+               'W' : np.eye(data['Z'].shape[1]),
                'Iter' : 2,
                'tol' : None,
                'maxiter' : 10,
@@ -74,16 +79,16 @@ def test_mygmm():
                'band' : int(data['T']**(1/3))}
     
     # Initialize GMM object
-    gmm = GMM(beta*2, data, options)
+    gmm = GMM(theta_true*2, data, options)
     # Estimate model with GMM
     gmm.gmmest()
     # Print results
     gmm.results()
     
     # Compare with OLS
-    Xps = pd.DataFrame(X)
+    Xps = pd.DataFrame(data['X'])
     Xps = Xps.rename(columns = {0 : 'X1', 1 : 'X2'})
-    Yps = pd.DataFrame(Y)
+    Yps = pd.DataFrame(data['Y'])
     Yps = Yps.rename(columns = {0 : 'Y'})
     df = pd.merge(Yps, Xps, left_index = True, right_index = True)
     res = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)

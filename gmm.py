@@ -1,37 +1,29 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 20 10:59:05 2012
-
-@author: skhrapov
-"""
-
 import numpy as np
 from scipy import optimize, stats, linalg
 #from numba import autojit
 
 
 def results(gmm, data, options):
-    '''
-    Print results function
-    Does not return anything
-    '''
+    """Print results function.
+    
+    Does not return anything. Just prints.
+    """
     np.set_printoptions(precision = options['precision'], suppress = True)
     
-    print '-' * 60
-    print 'The final results are'
-    print gmm.message
-    print 'theta   = ', gmm.x
-    print 's.e.    = ', gmm.se
-    print 't-stat  = ', gmm.t
-    print 'J-stat  = ', '%0.2f' % gmm.fun
-    print 'df      = ', gmm.df
-    print 'p-value = ', '%0.2f' % gmm.pval
-    print '-' * 60
+    print('-' * 60)
+    print('The final results are')
+    print(gmm.message)
+    print('theta   = ', gmm.x)
+    print('s.e.    = ', gmm.se)
+    print('t-stat  = ', gmm.t)
+    print('J-stat  = ', '%0.2f' % gmm.fun)
+    print('df      = ', gmm.df)
+    print('p-value = ', '%0.2f' % gmm.pval)
+    print('-' * 60)
 
 
 def gmmest(theta, data, options):
-    '''
-    Multiple step GMM estimation procedure
+    """Multiple step GMM estimation procedure.
     
     Inputs:
         theta : vector, 1 x k
@@ -41,8 +33,8 @@ def gmmest(theta, data, options):
     Output:
         gmm : object containing optimization results and statistics
         
-    '''
-    print 'Theta 0 = ', theta
+    """
+    print('Theta 0 = ', theta)
     # First step GMM
     for i in range(options['Iter']):
         # Compute optimal weighting matrix
@@ -60,8 +52,8 @@ def gmmest(theta, data, options):
         # Update parameter for the next step
         theta = gmm.x
         gmm.fun = data['T'] * gmm.fun
-        print 'Theta', i+1, ' = ', gmm.x
-        print 'f', i+1, ' = ', gmm.fun
+        print('Theta', i+1, ' = ', gmm.x)
+        print('f', i+1, ' = ', gmm.fun)
     
     gmm.W = options['W']
     # k x k
@@ -79,8 +71,7 @@ def gmmest(theta, data, options):
 
 #@autojit
 def gmmobjective(theta, data, options):
-    '''
-    GMM objective function and its gradient
+    """GMM objective function and its gradient.
     
     Inputs:
         theta : vector, 1 x k
@@ -90,7 +81,7 @@ def gmmobjective(theta, data, options):
     Output:
         f : 1 x 1, value of objective function, see Hansen (2012, p.241)
         df : 1 x k, derivative of objective function, 1 x parameters
-    '''
+    """
     #theta = theta.flatten()
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
@@ -110,7 +101,7 @@ def gmmobjective(theta, data, options):
 
 
 def weights(theta, data, options):
-    '''
+    """
     Optimal weighting matrix
     
     Inputs:
@@ -121,7 +112,7 @@ def weights(theta, data, options):
     Output:
         invS : q x q, moments x moments
         
-    '''
+    """
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
     g, dg = options['moment'](theta, data, options)
@@ -134,8 +125,7 @@ def weights(theta, data, options):
 
     
 def varest(theta, data, options):
-    '''
-    Variance matrix of parameters
+    """Variance matrix of parameters.
     
     Inputs:
         theta : vector, 1 x k
@@ -145,7 +135,7 @@ def varest(theta, data, options):
     Output:
         V : k x k, parameters x parameters
         
-    '''
+    """
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
     g, dg = options['moment'](theta, data, options)
@@ -158,8 +148,7 @@ def varest(theta, data, options):
 
 #@autojit
 def hac(u, kernel = 'Bartlett', band = 0):
-    '''
-    HAC estimator of variance matrix of moments
+    """HAC estimator of variance matrix of moments.
     
     Inputs:
         theta : vector, 1 x k
@@ -169,7 +158,7 @@ def hac(u, kernel = 'Bartlett', band = 0):
     Output:
         S : q x q, moments x moments
         
-    '''
+    """
     T = u.shape[0]
     
     # Demean to improve covariance estimate in small samples

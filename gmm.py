@@ -149,13 +149,15 @@ def varest(theta, data, options):
 def hac(u, kernel = 'Bartlett', band = 0):
     """HAC estimator of the long-run variance matrix of moments.
     
-    Inputs:
-        theta : 2d-array, T x q
-        kernel : type of kernel.
+    Args:
+        u: 2d-array, T x q
+        kernel: type of kernel.
             Currenly implemented: SU, Bartlett, Parzen, Quadratic
+        band: truncation parameter.
+            Ideally should be chosen optimally depending on the sample size!
         
-    Output:
-        S : long-run variance matrix of moments, q x q, moments x moments
+    Returns:
+        S: long-run variance matrix of moments, q x q, moments x moments
         
     """
     T = u.shape[0]

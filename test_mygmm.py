@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov 21 12:40:51 2012
-
-@author: skhrapov
-"""
-
 #import sys
 #sys.path.append("~/Dropbox/Computation/Python/PyGMM")
 
@@ -65,5 +58,5 @@ Yps = pd.DataFrame(Y)
 Yps = Yps.rename(columns = {0 : 'Y'})
 df = pd.merge(Yps, Xps, left_index = True, right_index = True)
 results = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)
-print np.array(results.beta)
-print np.array(results.t_stat)
+print(np.array(results.beta))
+print(np.array(results.t_stat))

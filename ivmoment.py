@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov 21 12:41:32 2012
-
-@author: skhrapov
-"""
-
 import numpy as np
 
 def ivmoment(theta, data, options):
-    '''
-    Moment function, problem specific
+    """Moment function, problem specific.
     
     Inputs:
         theta : vector, 1 x k
@@ -20,7 +12,7 @@ def ivmoment(theta, data, options):
         g : T x q, observations x moments
         dg : q x k, gradient mean over observations, moments x parameters
         
-    '''
+    """
     # 1 x k
     theta = theta.flatten()
     # T x 1

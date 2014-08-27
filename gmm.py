@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Nov 20 10:59:05 2012
-
-@author: skhrapov
-"""
-
 import numpy as np
 from scipy import optimize, stats, linalg
 #from numba import autojit
@@ -17,16 +10,16 @@ def results(gmm, data, options):
     """
     np.set_printoptions(precision = options['precision'], suppress = True)
     
-    print '-' * 60
-    print 'The final results are'
-    print gmm.message
-    print 'theta   = ', gmm.x
-    print 's.e.    = ', gmm.se
-    print 't-stat  = ', gmm.t
-    print 'J-stat  = ', '%0.2f' % gmm.fun
-    print 'df      = ', gmm.df
-    print 'p-value = ', '%0.2f' % gmm.pval
-    print '-' * 60
+    print('-' * 60)
+    print('The final results are')
+    print(gmm.message)
+    print('theta   = ', gmm.x)
+    print('s.e.    = ', gmm.se)
+    print('t-stat  = ', gmm.t)
+    print('J-stat  = ', '%0.2f' % gmm.fun)
+    print('df      = ', gmm.df)
+    print('p-value = ', '%0.2f' % gmm.pval)
+    print('-' * 60)
 
 
 def gmmest(theta, data, options):
@@ -41,7 +34,7 @@ def gmmest(theta, data, options):
         gmm : object containing optimization results and statistics
         
     """
-    print 'Theta 0 = ', theta
+    print('Theta 0 = ', theta)
     # First step GMM
     for i in range(options['Iter']):
         # Compute optimal weighting matrix
@@ -59,8 +52,8 @@ def gmmest(theta, data, options):
         # Update parameter for the next step
         theta = gmm.x
         gmm.fun = data['T'] * gmm.fun
-        print 'Theta', i+1, ' = ', gmm.x
-        print 'f', i+1, ' = ', gmm.fun
+        print('Theta', i+1, ' = ', gmm.x)
+        print('f', i+1, ' = ', gmm.fun)
     
     gmm.W = options['W']
     # k x k

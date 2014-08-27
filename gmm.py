@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import optimize, stats, linalg
+from hac import hac
 #from numba import autojit
-
 
 def results(gmm, data, options):
     """Print results function.
@@ -146,53 +146,8 @@ def varest(theta, data, options):
     
     return V
 
-#@autojit
-def hac(u, kernel = 'Bartlett', band = 0):
-    """HAC estimator of variance matrix of moments.
-    
-    Inputs:
-        theta : vector, 1 x k
-        data : problem scpecific
-        options : control of optimization, etc.
-        
-    Output:
-        S : q x q, moments x moments
-        
-    """
-    T = u.shape[0]
-    
-    # Demean to improve covariance estimate in small samples
-    # T x q
-    u = u - u.mean(0)
-    # q x q
-    S = np.dot(u.T, u) / T
-    
-    for lag in range(band):
-        
-        # Some constants
-        a = (lag + 1.) / (band + 1.)
-        d = (lag + 1.) / band
-        m = 6 * np.pi * d / 5
-        
-        # Serially Uncorrelated
-        if kernel == 'SU' :
-            w = 0
-        # Newey West (1987)
-        elif 'Bartlett' :
-            if a <= 1 : w = 1 - a
-            else : w = 0
-        # Gallant (1987)
-        elif kernel == 'Parzen' :
-            if a <= .5 : w = 1. - 6. * a**2 * (1. - a)
-            elif a <= 1. : w = 2 * (1. - a)**3
-            else : w = 0.
-        # Andrews (1991)
-        elif kernel == 'Quadratic' :
-            w = 25 / (12*(d*np.pi)**2) * (np.sin(m)/m - np.cos(m))
-        
-        # q x q
-        Gamma = np.dot(u[:-lag-1, :].T, u[lag+1:, :]) / T
-        # q x q, w is scalar
-        S += w * (Gamma + Gamma.T)
-    
-    return S
+
+
+if __name__ == '__main__':
+    import test_mygmm
+    test_mygmm.test_mygmm()

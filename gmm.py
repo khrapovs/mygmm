@@ -11,10 +11,10 @@ from scipy import optimize, stats, linalg
 
 
 def results(gmm, data, options):
-    '''
-    Print results function
-    Does not return anything
-    '''
+    """Print results function.
+    
+    Does not return anything. Just prints.
+    """
     np.set_printoptions(precision = options['precision'], suppress = True)
     
     print '-' * 60
@@ -30,8 +30,7 @@ def results(gmm, data, options):
 
 
 def gmmest(theta, data, options):
-    '''
-    Multiple step GMM estimation procedure
+    """Multiple step GMM estimation procedure.
     
     Inputs:
         theta : vector, 1 x k
@@ -41,7 +40,7 @@ def gmmest(theta, data, options):
     Output:
         gmm : object containing optimization results and statistics
         
-    '''
+    """
     print 'Theta 0 = ', theta
     # First step GMM
     for i in range(options['Iter']):
@@ -79,8 +78,7 @@ def gmmest(theta, data, options):
 
 #@autojit
 def gmmobjective(theta, data, options):
-    '''
-    GMM objective function and its gradient
+    """GMM objective function and its gradient.
     
     Inputs:
         theta : vector, 1 x k
@@ -90,7 +88,7 @@ def gmmobjective(theta, data, options):
     Output:
         f : 1 x 1, value of objective function, see Hansen (2012, p.241)
         df : 1 x k, derivative of objective function, 1 x parameters
-    '''
+    """
     #theta = theta.flatten()
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
@@ -110,7 +108,7 @@ def gmmobjective(theta, data, options):
 
 
 def weights(theta, data, options):
-    '''
+    """
     Optimal weighting matrix
     
     Inputs:
@@ -121,7 +119,7 @@ def weights(theta, data, options):
     Output:
         invS : q x q, moments x moments
         
-    '''
+    """
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
     g, dg = options['moment'](theta, data, options)
@@ -134,8 +132,7 @@ def weights(theta, data, options):
 
     
 def varest(theta, data, options):
-    '''
-    Variance matrix of parameters
+    """Variance matrix of parameters.
     
     Inputs:
         theta : vector, 1 x k
@@ -145,7 +142,7 @@ def varest(theta, data, options):
     Output:
         V : k x k, parameters x parameters
         
-    '''
+    """
     # g - T x q, time x number of moments
     # dg - q x k, time x number of moments
     g, dg = options['moment'](theta, data, options)
@@ -158,8 +155,7 @@ def varest(theta, data, options):
 
 #@autojit
 def hac(u, kernel = 'Bartlett', band = 0):
-    '''
-    HAC estimator of variance matrix of moments
+    """HAC estimator of variance matrix of moments.
     
     Inputs:
         theta : vector, 1 x k
@@ -169,7 +165,7 @@ def hac(u, kernel = 'Bartlett', band = 0):
     Output:
         S : q x q, moments x moments
         
-    '''
+    """
     T = u.shape[0]
     
     # Demean to improve covariance estimate in small samples

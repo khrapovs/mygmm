@@ -2,7 +2,6 @@ import numpy as np
 from scipy import optimize, stats, linalg
 #from numba import autojit
 
-
 def results(gmm, data, options):
     """Print results function.
     
@@ -196,3 +195,7 @@ def hac(u, kernel = 'Bartlett', band = 0):
         S += w * (Gamma + Gamma.T)
     
     return S
+
+if __name__ == '__main__':
+    import test_mygmm
+    test_mygmm.test_mygmm()

@@ -26,7 +26,6 @@ class GMM(object):
         self.maxiter = 10
         self.method = 'BFGS'
         self.disp = True
-        # Should be determined automatically by counting the number of returns
         self.use_jacob = True
         self.kernel = 'Bartlett'
         self.band = int(self.T**(1/3))
@@ -48,9 +47,9 @@ class GMM(object):
         print('theta   = ', self.theta)
         print('s.e.    = ', self.se)
         print('t-stat  = ', self.t)
-        print('J-stat  = ', '%0.2f' % self.res.fun)
+        print('J-stat  = %0.2f' % self.res.fun)
         print('df      = ', self.df)
-        print('p-value = ', '%0.2f' % self.pval)
+        print('p-value = %0.2f' % self.pval)
         print('-' * 60)
     
     
@@ -73,24 +72,23 @@ class GMM(object):
             # Only after the first step
             if i > 0:
                 self.W = self.weights(self.theta)
-            # i step GMM
             
-            opt_options = {'disp' : self.disp,
-                           'maxiter' : self.maxiter}
+            opt_options = {'disp' : self.disp, 'maxiter' : self.maxiter}
             self.res = minimize(self.gmmobjective, self.theta,
                                 method = self.method,
                                 jac = self.use_jacob,
                                 options = opt_options)
             # Update parameter for the next step
             self.theta = self.res.x
-            #self.res.fun = self.T * self.res.fun
             print('Theta', i+1, ' = ', self.theta)
             print('f', i+1, ' = ', self.res.fun * self.T)
         
         # k x k
         V = self.varest(self.theta)
+        # J-statistic
+        self.J = self.res.fun * self.T
         # p-value of the J-test, scalar
-        self.pval = 1 - stats.chi2.cdf(self.res.fun, self.df)
+        self.pval = 1 - stats.chi2.cdf(self.J, self.df)
         # t-stat for each parameter, 1 x k
         self.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k

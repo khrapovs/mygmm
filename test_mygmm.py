@@ -6,31 +6,39 @@ import numpy as np
 from gmm import GMM
 import pandas as pd
 
-def ivmoment(theta, data, options):
-    """Moment function, problem specific.
+class Model(GMM):
+    """Model moment restrictions and Jacobian.
     
-    Args:
-        theta : vector, 1 x k
-        data : problem scpecific
-        options : control of optimization, etc.
-        
-    Returns:
-        g : T x q, observations x moments
-        dg : q x k, gradient mean over observations, moments x parameters
-        
+    Inherits from GMM class.    
     """
-    # 1 x k
-    theta = theta.flatten()
-    # T x 1
-    error = (data['Y'] - np.dot(data['X'], theta)).reshape((data['T'], 1))
-    # T x k
-    de = - data['X']
-    # T x q
-    g = error * data['Z']
-    # q x k
-    dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
-    
-    return g, dg
+    def __init__(self, theta_init, data, options):
+        super(Model, self).__init__(theta_init, data, options)
+
+    def moment(self, theta, data, options):
+        """Moment function, problem specific.
+        
+        Args:
+            theta : vector, 1 x k
+            data : problem scpecific
+            options : control of optimization, etc.
+            
+        Returns:
+            g : T x q, observations x moments
+            dg : q x k, gradient mean over observations, moments x parameters
+            
+        """
+        # 1 x k
+        theta = theta.flatten()
+        # T x 1
+        error = (data['Y'] - data['X'].dot(theta)).reshape((data['T'], 1))
+        # T x k
+        de = - data['X']
+        # T x q
+        g = error * data['Z']
+        # q x k
+        dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
+        
+        return g, dg
 
 def generate_data():
     # Number of observations
@@ -65,8 +73,7 @@ def test_mygmm():
     
     data, theta_true = generate_data()
     # Initialize options for GMM
-    options = {'moment' : ivmoment,
-               'W' : np.eye(data['Z'].shape[1]),
+    options = {'W' : np.eye(data['Z'].shape[1]),
                'Iter' : 2,
                'tol' : None,
                'maxiter' : 10,
@@ -79,7 +86,7 @@ def test_mygmm():
                'band' : int(data['T']**(1/3))}
     
     # Initialize GMM object
-    gmm = GMM(theta_true*2, data, options)
+    gmm = Model(theta_true*2, data, options)
     # Estimate model with GMM
     gmm.gmmest()
     # Print results

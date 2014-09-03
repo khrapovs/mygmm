@@ -92,7 +92,7 @@ class GMM(object):
         #theta = theta.flatten()
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.options['moment'](theta, self.data, self.options)
+        g, dg = self.moment(theta, self.data, self.options)
         # g - 1 x q, 1 x number of moments
         g = g.mean(0).flatten()
         # 1 x 1
@@ -121,7 +121,7 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.options['moment'](self.theta, self.data, self.options)
+        g, dg = self.moment(self.theta, self.data, self.options)
         # q x q
         S = hac(g, self.options['kernel'], self.options['band'])
         # q x q
@@ -143,7 +143,7 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.options['moment'](self.theta, self.data, self.options)
+        g, dg = self.moment(self.theta, self.data, self.options)
         # q x q
         S = self.weights()
         # k x k

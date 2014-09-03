@@ -10,17 +10,22 @@ class GMM(object):
         self.data = data
         self.theta = theta
         
+        # Should check that the moment function exists!
         g, dg = self.moment(theta)
         
         # Dimensions:
         
         # Sample size
         self.T = g.shape[0]
+        assert self.T > 0, 'Number of observations must be positive'
         # Number of moment restrictions and parameters
         self.q, self.k = dg.shape
-        assert self.k == len(self.theta)
+        assert self.k == len(self.theta), 'The shape of the Jacobian is wrong,\
+            the second dimension should coincide with number of parameters'
         # Degrees of freedom, scalar
         self.df = self.q - self.k
+        assert self.df > 0, 'Degrees of freedom should be positive\
+            for overidentification'
         
         # Default options:
         
@@ -58,7 +63,7 @@ class GMM(object):
         print('theta   = ', self.theta)
         print('s.e.    = ', self.se)
         print('t-stat  = ', self.t)
-        print('J-stat  = %0.2f' % self.res.fun)
+        print('J-stat  = %0.2f' % self.J)
         print('df      = ', self.df)
         print('p-value = %0.2f' % self.pval)
         print('-' * 60)
@@ -125,6 +130,7 @@ class GMM(object):
         g = g.mean(0).flatten()
         # 1 x 1
         f = float(g.dot(self.W).dot(g.T))
+        assert f >= 0, 'Objective function should be non-negative'
         
         if self.use_jacob:
             # 1 x k    

@@ -96,16 +96,15 @@ class GMM(object):
         # g - 1 x q, 1 x number of moments
         g = g.mean(0).flatten()
         # 1 x 1
-        f = float(np.dot(g, self.options['W']).dot(g.T))
+        f = float(g.dot(self.options['W']).dot(g.T))
         
         if self.options['jacob']:
             # 1 x k    
-            df = 2 * np.dot(g, self.options['W']).dot(dg).flatten()
+            df = 2 * g.dot(self.options['W']).dot(dg).flatten()
             
             return f, df
         else:
             return f
-    
     
     def weights(self):
         """
@@ -130,7 +129,6 @@ class GMM(object):
         
         return invS
     
-        
     def varest(self):
         """Variance matrix of parameters.
         

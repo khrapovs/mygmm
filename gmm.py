@@ -47,7 +47,7 @@ class GMM(object):
         self.band = int(self.T**(1/3))
         
     def print_results(self):
-        """Print results function.
+        """Print GMM estimation results.
         
         Args:
             None
@@ -162,15 +162,13 @@ class GMM(object):
         return invS
     
     def varest(self, theta):
-        """Variance matrix of parameters.
+        """Estimate variance matrix of parameters.
         
         Args:
-            theta : vector, 1 x k
-            data : problem scpecific
-            options : control of optimization, etc.
+            theta: parameter vector, 1 x k
             
         Returns:
-            V : k x k, parameters x parameters
+            V: k x k, variance matrix of parameters
             
         """
         # g - T x q, time x number of moments
@@ -179,7 +177,8 @@ class GMM(object):
         # q x q
         S = self.weights(theta)
         # k x k
-        V = linalg.pinv(np.atleast_2d(dg.T.dot(S).dot(dg))) / self.T
+        # What if k = 1?
+        V = linalg.pinv(dg.T.dot(S).dot(dg)) / self.T
         
         return V
 

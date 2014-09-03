@@ -73,12 +73,10 @@ class GMM(object):
         """Multiple step GMM estimation procedure.
         
         Args:
-            theta : vector, 1 x k
-            data : problem scpecific
-            options : control of optimization, etc.
+            theta: parameters, 1 x k
             
         Returns:
-            gmm : object containing optimization results and statistics
+            None
             
         """
         print('Theta 0 = ', self.theta)
@@ -114,13 +112,12 @@ class GMM(object):
         """GMM objective function and its gradient.
         
         Args:
-            theta : vector, 1 x k
-            data : problem scpecific
-            options : control of optimization, etc.
+            theta: parameters, 1 x k
         
         Returns:
-            f : 1 x 1, value of objective function, see Hansen (2012, p.241)
-            df : 1 x k, derivative of objective function, 1 x parameters
+            f: 1 x 1, value of objective function, see Hansen (2012, p.241)
+            df: 1 x k, derivative of objective function, 1 x parameters.
+                Depends on the switch 'use_jacob'
         """
         #theta = theta.flatten()
         # g - T x q, time x number of moments
@@ -145,10 +142,10 @@ class GMM(object):
         Optimal weighting matrix
         
         Args:
-            theta : k-vector
+            theta: k-vector
             
         Returns:
-            invS : inverse of moments covariance matrix, q x q
+            invS: inverse of moments covariance matrix, q x q
             
         """
         # g - T x q, time x number of moments
@@ -165,7 +162,7 @@ class GMM(object):
         """Estimate variance matrix of parameters.
         
         Args:
-            theta: parameter vector, 1 x k
+            theta: parameters, 1 x k
             
         Returns:
             V: k x k, variance matrix of parameters

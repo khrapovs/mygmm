@@ -9,12 +9,12 @@ import pandas as pd
 def ivmoment(theta, data, options):
     """Moment function, problem specific.
     
-    Inputs:
+    Args:
         theta : vector, 1 x k
         data : problem scpecific
         options : control of optimization, etc.
         
-    Output:
+    Returns:
         g : T x q, observations x moments
         dg : q x k, gradient mean over observations, moments x parameters
         

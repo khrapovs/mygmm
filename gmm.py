@@ -33,12 +33,12 @@ class GMM(object):
     def gmmest(self):
         """Multiple step GMM estimation procedure.
         
-        Inputs:
+        Args:
             theta : vector, 1 x k
             data : problem scpecific
             options : control of optimization, etc.
             
-        Output:
+        Returns:
             gmm : object containing optimization results and statistics
             
         """
@@ -80,12 +80,12 @@ class GMM(object):
     def gmmobjective(self, theta):
         """GMM objective function and its gradient.
         
-        Inputs:
+        Args:
             theta : vector, 1 x k
             data : problem scpecific
             options : control of optimization, etc.
         
-        Output:
+        Returns:
             f : 1 x 1, value of objective function, see Hansen (2012, p.241)
             df : 1 x k, derivative of objective function, 1 x parameters
         """
@@ -96,11 +96,11 @@ class GMM(object):
         # g - 1 x q, 1 x number of moments
         g = g.mean(0).flatten()
         # 1 x 1
-        f = float(np.dot(np.dot(g, self.options['W']), g.T))
+        f = float(np.dot(g, self.options['W']).dot(g.T))
         
         if self.options['jacob']:
             # 1 x k    
-            df = 2 * np.dot(np.dot(g, self.options['W']), dg).flatten()
+            df = 2 * np.dot(g, self.options['W']).dot(dg).flatten()
             
             return f, df
         else:
@@ -111,12 +111,12 @@ class GMM(object):
         """
         Optimal weighting matrix
         
-        Inputs:
+        Args:
             theta : vector, 1 x k
             data : problem scpecific
             options : control of optimization, etc.
             
-        Output:
+        Returns:
             invS : q x q, moments x moments
             
         """
@@ -134,12 +134,12 @@ class GMM(object):
     def varest(self):
         """Variance matrix of parameters.
         
-        Inputs:
+        Args:
             theta : vector, 1 x k
             data : problem scpecific
             options : control of optimization, etc.
             
-        Output:
+        Returns:
             V : k x k, parameters x parameters
             
         """
@@ -149,7 +149,7 @@ class GMM(object):
         # q x q
         S = self.weights()
         # k x k
-        V = linalg.pinv(np.atleast_2d(np.dot(np.dot(dg.T, S), dg))) / self.data['T']
+        V = linalg.pinv(np.atleast_2d(dg.T.dot(S).dot(dg))) / self.data['T']
         
         return V
 

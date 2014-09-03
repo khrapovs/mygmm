@@ -38,7 +38,7 @@ class Model(GMM):
         
         return g, dg
 
-def generate_data():
+def simulate_data():
     # Number of observations
     T = 1e6
     # Correlation
@@ -62,14 +62,13 @@ def generate_data():
     #plt.show()
     
     # Collect data for GMM
-    data = {'T' : Y.shape[0], 'q' : Z.shape[1], 'k' : beta.shape[0],
-            'Y' : Y, 'X' : X, 'Z' : Z}
+    data = {'Y' : Y, 'X' : X, 'Z' : Z}
     
     return data, beta
     
 def test_mygmm():
     
-    data, theta_true = generate_data()
+    data, theta_true = simulate_data()
     # Initialize GMM object
     model = Model(theta_true*2, data)
     # Estimate model with GMM

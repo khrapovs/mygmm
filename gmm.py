@@ -9,11 +9,13 @@ class GMM(object):
     def __init__(self, theta, data):
         self.data = data
         self.theta = theta
+        
+        g, dg = self.moment(theta)
         # Dimensions:
         # Sample size
-        self.T = self.moment(theta)[0].shape[0]
+        self.T = g.shape[0]
         # Number of moment restrictions
-        self.q = self.moment(theta)[1].shape[0]
+        self.q = dg.shape[0]
         # Number of parameters
         self.k = len(self.theta)
         # Degrees of freedom, scalar

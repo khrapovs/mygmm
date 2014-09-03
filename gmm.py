@@ -11,7 +11,9 @@ class GMM(object):
         self.theta = theta
         
         g, dg = self.moment(theta)
+        
         # Dimensions:
+        
         # Sample size
         self.T = g.shape[0]
         # Number of moment restrictions and parameters
@@ -21,13 +23,22 @@ class GMM(object):
         self.df = self.q - self.k
         
         # Default options:
+        
+        # Weighting matrix
         self.W = np.eye(self.q)
+        # Number of GMM steps
         self.iter = 2
-        self.maxiter = 10
+        # Maximum iterations for the optimizer
+        self.maxiter = None
+        # Optimization method
         self.method = 'BFGS'
+        # Display convergence results
         self.disp = True
+        # Use analytic Jacobian?
         self.use_jacob = True
+        # HAC kernel type
         self.kernel = 'Bartlett'
+        # HAC kernel bandwidth
         self.band = int(self.T**(1/3))
         
     def print_results(self):

@@ -14,10 +14,9 @@ class GMM(object):
         # Dimensions:
         # Sample size
         self.T = g.shape[0]
-        # Number of moment restrictions
-        self.q = dg.shape[0]
-        # Number of parameters
-        self.k = len(self.theta)
+        # Number of moment restrictions and parameters
+        self.q, self.k = dg.shape
+        assert self.k == len(self.theta)
         # Degrees of freedom, scalar
         self.df = self.q - self.k
         

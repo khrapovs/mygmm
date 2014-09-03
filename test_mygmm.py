@@ -52,11 +52,11 @@ def simulate_data():
     # Instruments
     Z = np.random.normal(size = (T, 5))
     # Endogenous variables
-    X1 = np.dot(Z, gamma) + e[:,0]
-    X2 = np.dot(Z**2, gamma) + e[:,1]
+    X1 = Z.dot(gamma) + e[:,0]
+    X2 = (Z**2).dot(gamma) + e[:,1]
     X = np.concatenate((X1[:, np.newaxis], X2[:, np.newaxis]), axis = 1)
     # Dependent variable
-    Y = np.dot(X, beta) + e[:,0] + rho * e[:,1]
+    Y = X.dot(beta) + e[:,0] + rho * e[:,1]
     
     #plt.scatter(X, Y)
     #plt.show()
@@ -83,6 +83,7 @@ def test_mygmm():
     Yps = Yps.rename(columns = {0 : 'Y'})
     df = pd.merge(Yps, Xps, left_index = True, right_index = True)
     res = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)
+    print('\nOLS results')
     print(np.array(res.beta))
     print(np.array(res.t_stat))
 

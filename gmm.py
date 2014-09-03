@@ -41,12 +41,12 @@ class GMM(object):
         print('-' * 60)
         print('The final results are')
         print(self.res.message)
-        print('theta   = ', self.res.x)
-        print('s.e.    = ', self.res.se)
-        print('t-stat  = ', self.res.t)
+        print('theta   = ', self.theta)
+        print('s.e.    = ', self.se)
+        print('t-stat  = ', self.t)
         print('J-stat  = ', '%0.2f' % self.res.fun)
         print('df      = ', self.df)
-        print('p-value = ', '%0.2f' % self.res.pval)
+        print('p-value = ', '%0.2f' % self.pval)
         print('-' * 60)
     
     
@@ -79,18 +79,18 @@ class GMM(object):
                                 options = opt_options)
             # Update parameter for the next step
             self.theta = self.res.x
-            self.res.fun = self.T * self.res.fun
-            print('Theta', i+1, ' = ', self.res.x)
-            print('f', i+1, ' = ', self.res.fun)
+            #self.res.fun = self.T * self.res.fun
+            print('Theta', i+1, ' = ', self.theta)
+            print('f', i+1, ' = ', self.res.fun * self.T)
         
         # k x k
         V = self.varest(self.theta)
         # p-value of the J-test, scalar
-        self.res.pval = 1 - stats.chi2.cdf(self.res.fun, self.df)
+        self.pval = 1 - stats.chi2.cdf(self.res.fun, self.df)
         # t-stat for each parameter, 1 x k
-        self.res.se = np.diag(V)**.5
+        self.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k
-        self.res.t = self.res.x / self.res.se
+        self.t = self.theta / self.se
     
     def gmmobjective(self, theta):
         """GMM objective function and its gradient.
@@ -126,12 +126,10 @@ class GMM(object):
         Optimal weighting matrix
         
         Args:
-            theta : vector, 1 x k
-            data : problem scpecific
-            options : control of optimization, etc.
+            theta : k-vector
             
         Returns:
-            invS : q x q, moments x moments
+            invS : inverse of moments covariance matrix, q x q
             
         """
         # g - T x q, time x number of moments

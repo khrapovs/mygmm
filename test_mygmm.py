@@ -19,13 +19,10 @@ class Model(GMM):
         
         Args:
             theta : vector, 1 x k
-            data : problem scpecific
-            options : control of optimization, etc.
             
         Returns:
-            g : T x q, observations x moments
-            dg : q x k, gradient mean over observations, moments x parameters
-            
+            g : T x q, matrix of moment restrictions
+            dg : q x k, gradient of moment restrictions. Mean over observations
         """
         # T x 1
         error = self.data['Y'] - self.data['X'].dot(theta)
@@ -39,6 +36,15 @@ class Model(GMM):
         return g, dg
 
 def simulate_data():
+    """Simulate data.
+    
+    Args:
+        None
+        
+    Returns:
+        data: disctionary of model specific data arrays
+        beta: true parameter
+    """
     # Number of observations
     T = 1e6
     # Correlation
@@ -77,11 +83,8 @@ def test_mygmm():
     model.print_results()
     
     # Compare with OLS
-    Xps = pd.DataFrame(data['X'])
-    Xps = Xps.rename(columns = {0 : 'X1', 1 : 'X2'})
-    Yps = pd.DataFrame(data['Y'])
-    Yps = Yps.rename(columns = {0 : 'Y'})
-    df = pd.merge(Yps, Xps, left_index = True, right_index = True)
+    df = pd.DataFrame(data['X'], columns = ['X1','X2'])
+    df['Y'] = data['Y']
     res = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)
     print('\nOLS results')
     print(np.array(res.beta))

@@ -22,7 +22,7 @@ class GMM(object):
         
         # Default options:
         self.W = np.eye(self.q)
-        self.Iter = 2
+        self.iter = 2
         self.maxiter = 10
         self.method = 'BFGS'
         self.disp = True
@@ -34,7 +34,11 @@ class GMM(object):
     def print_results(self):
         """Print results function.
         
-        Does not return anything. Just prints.
+        Args:
+            None
+
+        Returns:
+            None
         """
         np.set_printoptions(precision = 3, suppress = True)
         
@@ -64,7 +68,7 @@ class GMM(object):
         """
         print('Theta 0 = ', self.theta)
         # First step GMM
-        for i in range(self.Iter):
+        for i in range(self.iter):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:

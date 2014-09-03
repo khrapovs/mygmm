@@ -11,10 +11,10 @@ class Model(GMM):
     
     Inherits from GMM class.    
     """
-    def __init__(self, theta_init, data, options):
-        super(Model, self).__init__(theta_init, data, options)
+    def __init__(self, theta, data):
+        super(Model, self).__init__(theta, data)
 
-    def moment(self, theta, data, options):
+    def moment(self, theta):
         """Moment function, problem specific.
         
         Args:
@@ -27,16 +27,14 @@ class Model(GMM):
             dg : q x k, gradient mean over observations, moments x parameters
             
         """
-        # 1 x k
-        theta = theta.flatten()
         # T x 1
-        error = (data['Y'] - data['X'].dot(theta)).reshape((data['T'], 1))
+        error = self.data['Y'] - self.data['X'].dot(theta)
         # T x k
-        de = - data['X']
+        de = - self.data['X']
         # T x q
-        g = error * data['Z']
+        g = (error * self.data['Z'].T).T
         # q x k
-        dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
+        dg = (de[:,np.newaxis,:] * self.data['Z'][:,:,np.newaxis]).mean(0)
         
         return g, dg
 
@@ -72,25 +70,12 @@ def generate_data():
 def test_mygmm():
     
     data, theta_true = generate_data()
-    # Initialize options for GMM
-    options = {'W' : np.eye(data['Z'].shape[1]),
-               'Iter' : 2,
-               'tol' : None,
-               'maxiter' : 10,
-               'method' : 'BFGS',
-               'disp' : True,
-               'precision' : 3,
-               'jacob' : True,
-               'kernel' : 'Bartlett',
-               'bounds' : None,
-               'band' : int(data['T']**(1/3))}
-    
     # Initialize GMM object
-    gmm = Model(theta_true*2, data, options)
+    model = Model(theta_true*2, data)
     # Estimate model with GMM
-    gmm.gmmest()
+    model.gmmest()
     # Print results
-    gmm.results()
+    model.print_results()
     
     # Compare with OLS
     Xps = pd.DataFrame(data['X'])

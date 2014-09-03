@@ -1,22 +1,41 @@
 import numpy as np
-from scipy import optimize, stats, linalg
+from scipy import stats, linalg
+from scipy.optimize import minimize
 from hac import hac
 #from numba import autojit
 
 class GMM(object):
     
-    def __init__(self, theta_init, data, options):
+    def __init__(self, theta, data):
         self.data = data
-        self.theta = theta_init
-        self.options = options
+        self.theta = theta
+        # Dimensions:
+        # Sample size
+        self.T = self.moment(theta)[0].shape[0]
+        # Number of moment restrictions
+        self.q = self.moment(theta)[1].shape[0]
+        # Number of parameters
+        self.k = len(self.theta)
+        # Degrees of freedom, scalar
+        self.df = self.q - self.k
         
-    def results(self):
+        # Default options:
+        self.W = np.eye(self.q)
+        self.Iter = 2
+        self.maxiter = 10
+        self.method = 'BFGS'
+        self.disp = True
+        # Should be determined automatically by counting the number of returns
+        self.use_jacob = True
+        self.kernel = 'Bartlett'
+        self.band = int(self.T**(1/3))
+        
+    def print_results(self):
         """Print results function.
         
         Does not return anything. Just prints.
         """
-        np.set_printoptions(precision = self.options['precision'],
-                            suppress = True)
+        np.set_printoptions(precision = 3, suppress = True)
         
         print('-' * 60)
         print('The final results are')
@@ -25,7 +44,7 @@ class GMM(object):
         print('s.e.    = ', self.res.se)
         print('t-stat  = ', self.res.t)
         print('J-stat  = ', '%0.2f' % self.res.fun)
-        print('df      = ', self.res.df)
+        print('df      = ', self.df)
         print('p-value = ', '%0.2f' % self.res.pval)
         print('-' * 60)
     
@@ -44,34 +63,29 @@ class GMM(object):
         """
         print('Theta 0 = ', self.theta)
         # First step GMM
-        for i in range(self.options['Iter']):
+        for i in range(self.Iter):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
-                self.options['W'] = self.weights()
+                self.W = self.weights(self.theta)
             # i step GMM
             
-            opt_options = {'disp' : self.options['disp'],
-                           'maxiter' : self.options['maxiter']}
-            self.res = optimize.minimize(self.gmmobjective, self.theta,
-                                    method = self.options['method'],
-                                    jac = self.options['jacob'],
-                                    tol = self.options['tol'],
-                                    bounds = self.options['bounds'],
-                                    options = opt_options)
+            opt_options = {'disp' : self.disp,
+                           'maxiter' : self.maxiter}
+            self.res = minimize(self.gmmobjective, self.theta,
+                                method = self.method,
+                                jac = self.use_jacob,
+                                options = opt_options)
             # Update parameter for the next step
             self.theta = self.res.x
-            self.res.fun = self.data['T'] * self.res.fun
+            self.res.fun = self.T * self.res.fun
             print('Theta', i+1, ' = ', self.res.x)
             print('f', i+1, ' = ', self.res.fun)
         
-        self.res.W = self.options['W']
         # k x k
-        V = self.varest()
-        # degrees of freedom, scalar
-        self.res.df = self.data['q'] - self.data['k']
+        V = self.varest(self.theta)
         # p-value of the J-test, scalar
-        self.res.pval = 1 - stats.chi2.cdf(self.res.fun, self.res.df)
+        self.res.pval = 1 - stats.chi2.cdf(self.res.fun, self.df)
         # t-stat for each parameter, 1 x k
         self.res.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k
@@ -92,21 +106,21 @@ class GMM(object):
         #theta = theta.flatten()
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.moment(theta, self.data, self.options)
+        g, dg = self.moment(theta)
         # g - 1 x q, 1 x number of moments
         g = g.mean(0).flatten()
         # 1 x 1
-        f = float(g.dot(self.options['W']).dot(g.T))
+        f = float(g.dot(self.W).dot(g.T))
         
-        if self.options['jacob']:
+        if self.use_jacob:
             # 1 x k    
-            df = 2 * g.dot(self.options['W']).dot(dg).flatten()
+            df = 2 * g.dot(self.W).dot(dg).flatten()
             
             return f, df
         else:
             return f
     
-    def weights(self):
+    def weights(self, theta):
         """
         Optimal weighting matrix
         
@@ -121,15 +135,15 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.moment(self.theta, self.data, self.options)
+        g = self.moment(theta)[0]
         # q x q
-        S = hac(g, self.options['kernel'], self.options['band'])
+        S = hac(g, self.kernel, self.band)
         # q x q
         invS = linalg.pinv(S)
         
         return invS
     
-    def varest(self):
+    def varest(self, theta):
         """Variance matrix of parameters.
         
         Args:
@@ -143,11 +157,11 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        g, dg = self.moment(self.theta, self.data, self.options)
+        dg = self.moment(theta)[1]
         # q x q
-        S = self.weights()
+        S = self.weights(theta)
         # k x k
-        V = linalg.pinv(np.atleast_2d(dg.T.dot(S).dot(dg))) / self.data['T']
+        V = linalg.pinv(np.atleast_2d(dg.T.dot(S).dot(dg))) / self.T
         
         return V
 

@@ -108,13 +108,13 @@ class GMM(object):
         """Multiple step GMM estimation procedure.
 
         """
-        print('Theta 0 = ', self.theta)
         # First step GMM
         for i in range(self.iter):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
-                self.W = self.weights(self.theta)
+                g = self.moment(self.theta)[0]
+                self.W = self.weights(g)
 
             opt_options = {'disp' : self.disp, 'maxiter' : self.maxiter}
             self.res = minimize(self.gmmobjective, self.theta,
@@ -123,8 +123,6 @@ class GMM(object):
                                 options=opt_options)
             # Update parameter for the next step
             self.theta = self.res.x
-            print('Theta', i+1, ' = ', self.theta)
-            print('f', i+1, ' = ', self.res.fun * self.T)
 
         # k x k
         V = self.varest(self.theta)
@@ -171,14 +169,14 @@ class GMM(object):
         else:
             return f
 
-    def weights(self, theta):
+    def weights(self, g):
         """
         Optimal weighting matrix
 
         Parameters
         ----------
-            theta : (k,) array
-                Parameters
+            g : (T, q) array
+                Moment restrictions
 
         Returns
         -------
@@ -186,15 +184,10 @@ class GMM(object):
                 Inverse of moments covariance matrix
 
         """
-        # g - T x q, time x number of moments
-        # dg - q x k, time x number of moments
-        g = self.moment(theta)[0]
         # q x q
         S = hac(g, self.kernel, self.band)
-        # q x q
-        invS = linalg.pinv(S)
-
-        return invS
+        
+        return linalg.pinv(S)
 
     def varest(self, theta):
         """Estimate variance matrix of parameters.
@@ -212,9 +205,9 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
-        dg = self.moment(theta)[1]
+        g, dg = self.moment(theta)
         # q x q
-        S = self.weights(theta)
+        S = self.weights(g)
         # k x k
         # What if k = 1?
         V = linalg.pinv(dg.T.dot(S).dot(dg)) / self.T

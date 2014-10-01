@@ -3,36 +3,48 @@
 # sys.path.append("~/Dropbox/Computation/Python/MyGMM")
 
 import numpy as np
-from gmm import gmmest, results
+from gmm import GMM
 import pandas as pd
 
-def ivmoment(theta, data, options):
-    """Moment function, problem specific.
+class Model(GMM):
+    """Model moment restrictions and Jacobian.
     
-    Inputs:
-        theta : vector, 1 x k
-        data : problem scpecific
-        options : control of optimization, etc.
-        
-    Output:
-        g : T x q, observations x moments
-        dg : q x k, gradient mean over observations, moments x parameters
-        
+    Inherits from GMM class.    
     """
-    # 1 x k
-    theta = theta.flatten()
-    # T x 1
-    error = (data['Y'] - np.dot(data['X'], theta)).reshape((data['T'], 1))
-    # T x k
-    de = - data['X']
-    # T x q
-    g = error * data['Z']
-    # q x k
-    dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
-    
-    return g, dg
+    def __init__(self, theta, data):
+        super(Model, self).__init__(theta, data)
 
-def test_mygmm():
+    def moment(self, theta):
+        """Moment function, problem specific.
+        
+        Args:
+            theta : vector, 1 x k
+            
+        Returns:
+            g : T x q, matrix of moment restrictions
+            dg : q x k, gradient of moment restrictions. Mean over observations
+        """
+        # T x 1
+        error = self.data['Y'] - self.data['X'].dot(theta)
+        # T x k
+        de = - self.data['X']
+        # T x q
+        g = (error * self.data['Z'].T).T
+        # q x k
+        dg = (de[:,np.newaxis,:] * self.data['Z'][:,:,np.newaxis]).mean(0)
+        
+        return g, dg
+
+def simulate_data():
+    """Simulate data.
+    
+    Args:
+        None
+        
+    Returns:
+        data: disctionary of model specific data arrays
+        beta: true parameter
+    """
     # Number of observations
     T = 1e6
     # Correlation
@@ -46,45 +58,35 @@ def test_mygmm():
     # Instruments
     Z = np.random.normal(size = (T, 5))
     # Endogenous variables
-    X1 = np.dot(Z, gamma) + e[:,0]
-    X2 = np.dot(Z**2, gamma) + e[:,1]
+    X1 = Z.dot(gamma) + e[:,0]
+    X2 = (Z**2).dot(gamma) + e[:,1]
     X = np.concatenate((X1[:, np.newaxis], X2[:, np.newaxis]), axis = 1)
     # Dependent variable
-    Y = np.dot(X, beta) + e[:,0] + rho * e[:,1]
+    Y = X.dot(beta) + e[:,0] + rho * e[:,1]
     
     #plt.scatter(X, Y)
     #plt.show()
     
     # Collect data for GMM
-    data = {'T' : Y.shape[0], 'q' : Z.shape[1], 'k' : beta.shape[0],
-            'Y' : Y, 'X' : X, 'Z' : Z}
+    data = {'Y' : Y, 'X' : X, 'Z' : Z}
     
-    # Initialize options for GMM
-    options = {'moment' : ivmoment,
-               'W' : np.eye(Z.shape[1]),
-               'Iter' : 2,
-               'tol' : None,
-               'maxiter' : 10,
-               'method' : 'BFGS',
-               'disp' : True,
-               'precision' : 3,
-               'jacob' : True,
-               'kernel' : 'Bartlett',
-               'bounds' : None,
-               'band' : int(data['T']**(1/3))}
+    return data, beta
     
+def test_mygmm():
+    
+    data, theta_true = simulate_data()
+    # Initialize GMM object
+    model = Model(theta_true*2, data)
     # Estimate model with GMM
-    gmm = gmmest(beta*2, data, options)
+    model.gmmest()
     # Print results
-    results(gmm, data, options)
+    model.print_results()
     
     # Compare with OLS
-    Xps = pd.DataFrame(X)
-    Xps = Xps.rename(columns = {0 : 'X1', 1 : 'X2'})
-    Yps = pd.DataFrame(Y)
-    Yps = Yps.rename(columns = {0 : 'Y'})
-    df = pd.merge(Yps, Xps, left_index = True, right_index = True)
+    df = pd.DataFrame(data['X'], columns = ['X1','X2'])
+    df['Y'] = data['Y']
     res = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)
+    print('\nOLS results')
     print(np.array(res.beta))
     print(np.array(res.t_stat))
 

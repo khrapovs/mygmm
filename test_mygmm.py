@@ -3,16 +3,18 @@
 # sys.path.append("~/Dropbox/Computation/Python/MyGMM")
 
 import numpy as np
-from gmm import GMM
 import pandas as pd
+
+from MyGMM.gmm import GMM
 
 class Model(GMM):
     """Model moment restrictions and Jacobian.
     
     Inherits from GMM class.    
     """
-    def __init__(self, theta, data):
-        super(Model, self).__init__(theta, data)
+    def __init__(self, data):
+        self.data = data
+        super(Model, self).__init__()
     
     def moment(self, theta):
         return moment(theta, self.data)
@@ -80,9 +82,9 @@ def test_mygmm():
     
     data, theta_true = simulate_data()
     # Initialize GMM object
-    model = Model(theta_true*2, data)
+    model = Model(data)
     # Estimate model with GMM
-    model.gmmest()
+    model.gmmest(theta_true*2)
     # Print results
     model.print_results()
     

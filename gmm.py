@@ -8,38 +8,18 @@ from __future__ import print_function, division
 import numpy as np
 from scipy import stats, linalg
 from scipy.optimize import minimize
-from hac import hac
+
+from MyGMM.hac import hac
 
 class GMM(object):
     """GMM estimation class.
 
     """
 
-    def __init__(self, theta, data):
-        self.data = data
-        self.theta = theta
-
-        # Should check that the moment function exists!
-        g, dg = self.moment(theta)
-
-        # Dimensions:
-
-        # Sample size
-        self.T = g.shape[0]
-        assert self.T > 0, 'Number of observations must be positive'
-        # Number of moment restrictions and parameters
-        self.q, self.k = dg.shape
-        assert self.k == len(self.theta), 'The shape of the Jacobian is wrong,\
-            the second dimension should coincide with number of parameters'
-        # Degrees of freedom, scalar
-        self.df = self.q - self.k
-        assert self.df > 0, 'Degrees of freedom should be positive\
-            for overidentification'
-
+    def __init__(self):
+        
         # Default options:
 
-        # Weighting matrix
-        self.W = np.eye(self.q)
         # Number of GMM steps
         self.iter = 2
         # Maximum iterations for the optimizer
@@ -52,8 +32,6 @@ class GMM(object):
         self.use_jacob = True
         # HAC kernel type
         self.kernel = 'Bartlett'
-        # HAC kernel bandwidth
-        self.band = int(self.T**(1/3))
         # J-statistic
         self.J = None
         # Optimization results
@@ -104,10 +82,21 @@ class GMM(object):
         print('-' * 60)
 
 
-    def gmmest(self):
+    def gmmest(self, theta_start):
         """Multiple step GMM estimation procedure.
 
         """
+        self.theta = theta_start.copy()
+        g, dg = self.moment(self.theta)
+        self.T, self.q = g.shape
+        self.k = self.theta.shape[0]
+        # Number of degrees of freedom
+        self.df = self.q - self.k
+        # HAC kernel bandwidth
+        self.band = int(self.T**(1/3))
+
+        # Weighting matrix
+        self.W = np.eye(self.q)
         # First step GMM
         for i in range(self.iter):
             # Compute optimal weighting matrix

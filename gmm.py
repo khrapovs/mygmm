@@ -33,13 +33,13 @@ class GMM(object):
         # HAC kernel type
         self.kernel = 'Bartlett'
         # J-statistic
-        self.J = None
+        self.jstat = None
         # Optimization results
         self.res = None
         # Standard errors
         self.se = None
         # T-statistics
-        self.t = None
+        self.tstat = None
         # P-values
         self.pval = None
 
@@ -75,8 +75,8 @@ class GMM(object):
         print(self.res.message)
         print('theta   = ', self.theta)
         print('s.e.    = ', self.se)
-        print('t-stat  = ', self.t)
-        print('J-stat  = %0.2f' % self.J)
+        print('t-stat  = ', self.tstat)
+        print('J-stat  = %0.2f' % self.jstat)
         print('df      = ', self.df)
         print('p-value = %0.2f' % self.pval)
         print('-' * 60)
@@ -109,21 +109,25 @@ class GMM(object):
             self.res = minimize(self.gmmobjective, self.theta,
                                 method=self.method,
                                 jac=self.use_jacob,
-                                options=opt_options)
+                                options=opt_options,
+                                callback=self.callback)
             # Update parameter for the next step
             self.theta = self.res.x
 
         # k x k
         V = self.varest(self.theta)
         # J-statistic
-        self.J = self.res.fun * self.T
+        self.jstat = self.res.fun * self.T
         # p-value of the J-test, scalar
-        self.pval = 1 - stats.chi2.cdf(self.J, self.df)
+        self.pval = 1 - stats.chi2.cdf(self.jstat, self.df)
         # t-stat for each parameter, 1 x k
         self.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k
-        self.t = self.theta / self.se
-
+        self.tstat = self.theta / self.se
+    
+    def callback(self, theta):
+        pass
+        
     def gmmobjective(self, theta):
         """GMM objective function and its gradient.
 

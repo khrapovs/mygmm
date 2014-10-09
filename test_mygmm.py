@@ -3,37 +3,43 @@
 # sys.path.append("~/Dropbox/Computation/Python/MyGMM")
 
 import numpy as np
-from gmm import GMM
 import pandas as pd
+
+from MyGMM.gmm import GMM
 
 class Model(GMM):
     """Model moment restrictions and Jacobian.
     
     Inherits from GMM class.    
     """
-    def __init__(self, theta, data):
-        super(Model, self).__init__(theta, data)
-
+    def __init__(self, data):
+        self.data = data
+        super(Model, self).__init__()
+    
     def moment(self, theta):
-        """Moment function, problem specific.
+        return moment(theta, self.data)
+
+def moment(theta, data):
+    """Moment function, problem specific.
+    
+    Args:
+        theta : vector, 1 x k
         
-        Args:
-            theta : vector, 1 x k
-            
-        Returns:
-            g : T x q, matrix of moment restrictions
-            dg : q x k, gradient of moment restrictions. Mean over observations
-        """
-        # T x 1
-        error = self.data['Y'] - self.data['X'].dot(theta)
-        # T x k
-        de = - self.data['X']
-        # T x q
-        g = (error * self.data['Z'].T).T
-        # q x k
-        dg = (de[:,np.newaxis,:] * self.data['Z'][:,:,np.newaxis]).mean(0)
-        
-        return g, dg
+    Returns:
+        g : T x q, matrix of moment restrictions
+        dg : q x k, gradient of moment restrictions. Mean over observations
+    """
+    # T x 1
+    error = data['Y'] - data['X'].dot(theta)
+    # T x k
+    de = -data['X']
+    # T x q
+    g = (error * data['Z'].T).T
+    # q x k
+    dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
+    
+    return g, dg
+
 
 def simulate_data():
     """Simulate data.
@@ -76,9 +82,9 @@ def test_mygmm():
     
     data, theta_true = simulate_data()
     # Initialize GMM object
-    model = Model(theta_true*2, data)
+    model = Model(data)
     # Estimate model with GMM
-    model.gmmest()
+    model.gmmest(theta_true*2)
     # Print results
     model.print_results()
     

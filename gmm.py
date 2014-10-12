@@ -27,7 +27,7 @@ class GMM(object):
         # Optimization method
         self.method = 'BFGS'
         # Display convergence results
-        self.disp = True
+        self.disp = False
         # Use analytic Jacobian?
         self.use_jacob = True
         # HAC kernel type
@@ -89,7 +89,7 @@ class GMM(object):
         self.theta = theta_start.copy()
         g, dg = self.moment(self.theta)
         self.T, self.q = g.shape
-        self.k = self.theta.shape[0]
+        self.k = len(self.theta)
         # Number of degrees of freedom
         self.df = self.q - self.k
         # HAC kernel bandwidth

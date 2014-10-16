@@ -18,18 +18,31 @@ class Results(object):
     def __init__(self):
         """Initialize the class.
         """
+        # Parameter estimate
+        self.theta = None
         # Degrees of freedom
-        self.df = None
+        self.degf = None
         # J-statistic
         self.jstat = None
-        # Optimization results
-        self.res = None
         # Standard errors
-        self.se = None
-        # T-statistics
+        self.stde = None
+        # t-statistics
         self.tstat = None
-        # P-values
+        # p-value of the J test
         self.jpval = None
+
+    def print_results(self):
+        """Print results of the estimation.
+        """
+        print('-' * 60)
+        print('The final results are')
+        print('theta   = ', self.theta)
+        print('s.e.    = ', self.stde)
+        print('t-stat  = ', self.tstat)
+        print('J-stat  = %0.2f' % self.jstat)
+        print('df      = ', self.degf)
+        print('p-value = %0.2f' % self.jpval)
+        print('-' * 60)
 
 
 class GMM(object):
@@ -40,6 +53,8 @@ class GMM(object):
     def __init__(self):
         """Initialize the class.
         """
+        # Default options:
+        self.options = dict()
         # initialize class options
         self.__set_default_options()
         # initialize Results instance
@@ -49,8 +64,6 @@ class GMM(object):
         """Set default options.
 
         """
-        # Default options:
-        self.options = dict()
         # Number of GMM steps
         self.options['iter'] = 2
         # Optimization method
@@ -75,9 +88,9 @@ class GMM(object):
 
         Returns
         -------
-        g : (T, q) array
+        moment : (T, q) array
             Matrix of momcond restrictions
-        dg : (q, k) array
+        dmoment : (q, k) array
             Gradient of momcond restrictions. Mean over observations
 
         """
@@ -88,16 +101,7 @@ class GMM(object):
 
         """
         np.set_printoptions(precision=3, suppress=True)
-
-        print('-' * 60)
-        print('The final results are')
-        print('theta   = ', self.results.theta)
-        print('s.e.    = ', self.results.se)
-        print('t-stat  = ', self.results.tstat)
-        print('J-stat  = %0.2f' % self.results.jstat)
-        print('df      = ', self.results.df)
-        print('p-value = %0.2f' % self.results.jpval)
-        print('-' * 60)
+        self.results.print_results()
 
     def gmmest(self, theta_start, **kwargs):
         """Multiple step GMM estimation procedure.
@@ -107,30 +111,29 @@ class GMM(object):
 
         # Initialize theta to hold estimator
         theta = theta_start.copy()
-        g = self.momcond(theta)[0]
-        q = g.shape[1]
-        k = len(theta)
-        # Number of degrees of freedom
-        self.results.df = q - k
 
-        # Weighting matrix
-        W = np.eye(q)
         # First step GMM
         for i in range(self.options['iter']):
+            moment = self.momcond(theta)[0]
+            nmoms = moment.shape[1]
             # Compute optimal weighting matrix
             # Only after the first step
-            if i > 0:
-                g = self.momcond(theta)[0]
-                W = self.__weights(g)
+            if i == 0:
+                weight_mat = np.eye(nmoms)
+            else:
+                weight_mat = self.__weights(moment)
 
-            output = minimize(self.__gmmobjective, theta, args=(W,),
+            output = minimize(self.__gmmobjective, theta, args=(weight_mat,),
                               method=self.options['method'],
                               jac=self.options['use_jacob'],
                               callback=self.callback)
             # Update parameter for the next step
             theta = output.x
 
+        # Final theta
         self.results.theta = theta
+        # Number of degrees of freedom
+        self.results.degf = nmoms - len(theta)
         # J-statistic
         self.results.jstat = output.fun
 
@@ -140,95 +143,93 @@ class GMM(object):
         """Compute descriptive statistics.
 
         """
-        # k x k
-        V = self.__varest(self.results.theta)
+        # Variance matrix of parameters
+        var_theta = self.__varest(self.results.theta)
         # p-value of the J-test, scalar
-        self.results.jpval = 1 - chi2.cdf(self.results.jstat, self.results.df)
+        self.results.jpval = 1 - chi2.cdf(self.results.jstat,
+                                          self.results.degf)
         # t-stat for each parameter, 1 x k
-        self.results.se = np.diag(V)**.5
+        self.results.stde = np.diag(var_theta)**.5
         # t-stat for each parameter, 1 x k
-        self.results.tstat = self.results.theta / self.results.se
+        self.results.tstat = self.results.theta / self.results.stde
 
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration."""
         pass
 
-    def __gmmobjective(self, theta, W):
+    def __gmmobjective(self, theta, weight_mat):
         """GMM objective function and its gradient.
 
         Parameters
         ----------
-        theta : (k,) array
+        theta : (nparams,) array
             Parameters
-        W : (q, q) array
+        weight_mat : (nmoms, nmoms) array
             Weighting matrix
 
         Returns
         -------
-        f : float
+        value : float
             Value of objective function, see Hansen (2012, p.241)
-        df : (k,) array
+        dvalue : (nparams,) array
             Derivative of objective function.
             Depends on the switch 'use_jacob'
         """
-        #theta = theta.flatten()
-        # g - T x q, time x number of momconds
-        # dg - q x k, time x number of momconds
-        g, dg = self.momcond(theta)
-        T = g.shape[0]
-        # g - 1 x q, 1 x number of momconds
-        g = g.mean(0)
-        gW = g.dot(W)
-        f = float(gW.dot(g.T)) * T
-        assert f >= 0, 'Objective function should be non-negative'
+        # moment - nobs x nmoms
+        # dmoment - nmoms x nparams
+        moment, dmoment = self.momcond(theta)
+        nobs = moment.shape[0]
+        moment = moment.mean(0)
+        gdotw = moment.dot(weight_mat)
+        # Objective function
+        value = gdotw.dot(moment.T) * nobs
+        assert value >= 0, 'Objective function should be non-negative'
 
         if self.options['use_jacob']:
-            # 1 x k
-            df = 2 * gW.dot(dg) * T
-            return f, df
+            # 1 x nparams
+            dvalue = 2 * gdotw.dot(dmoment) * nobs
+            return value, dvalue
         else:
-            return f
+            return value
 
-    def __weights(self, g):
+    def __weights(self, moment):
         """
         Optimal weighting matrix
 
         Parameters
         ----------
-        g : (T, q) array
+        moment : (nobs, nmoms) array
             Moment restrictions
 
         Returns
         -------
-        (q, q) array
+        (nmoms, nmoms) array
             Inverse of momconds covariance matrix
 
         """
-        return pinv(hac(g, **self.options))
+        return pinv(hac(moment, **self.options))
 
     def __varest(self, theta):
         """Estimate variance matrix of parameters.
 
         Parameters
         ----------
-        theta : (k,)
+        theta : (nparams,)
             Parameters
 
         Returns
         -------
-        V : (k, k) array
+        (nparams, nparams) array
             Variance matrix of parameters
 
         """
-        # g - T x q, time x number of momconds
-        # dg - q x k, time x number of momconds
+        # g - nobs x q, time x number of momconds
+        # dmoment - q x k, time x number of momconds
         # TODO : What if Jacobian is not returned?
-        g, dg = self.momcond(theta)
-        # q x q
-        S = self.__weights(g)
-        # k x k
+        moment, dmoment = self.momcond(theta)
+        var_moment = self.__weights(moment)
         # TODO : What if k = 1?
-        return pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
+        return pinv(dmoment.T.dot(var_moment).dot(dmoment)) / moment.shape[0]
 
 if __name__ == '__main__':
     import test_mygmm

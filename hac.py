@@ -4,11 +4,12 @@
 
 HAC - Heteroscedasticity and Autocorrelation Consistent
 """
+
 from __future__ import division
 from math import cos, sin, pi
-import numpy as np
+#import numpy as np
 
-def hac(vectors, kernel='SU', band=0):
+def hac(vectors, **kwargs):
     """HAC estimator of the long-run variance matrix of u.
 
     Parameters
@@ -29,31 +30,34 @@ def hac(vectors, kernel='SU', band=0):
 
     """
     length = vectors.shape[0]
-
+    
+    options = {'kernel' : 'SU', 'band' : int(length**(1/3))}
+    options.update(kwargs)
+    
     # Demean to improve covariance estimate in small samples
     # T x q
     vectors -= vectors.mean(0)
     # q x q
-    covar = np.dot(vectors.T, vectors) / length
+    covar = vectors.T.dot(vectors) / length
 
-    for lag in range(band):
+    for lag in range(options['band']):
 
         # Some constants
-        a_coef = (lag+1)/(band+1)
-        d_coef = (lag+1)/band
+        a_coef = (lag+1)/(options['band']+1)
+        d_coef = (lag+1)/options['band']
         m_coef = 6*pi*d_coef/5
 
         # Serially Uncorrelated
-        if kernel == 'SU':
+        if options['kernel'] == 'SU':
             weight = 0
         # Newey West (1987)
-        elif 'Bartlett':
+        elif options['kernel'] == 'Bartlett':
             if a_coef <= 1:
                 weight = 1-a_coef
             else:
                 weight = 0
         # Gallant (1987)
-        elif kernel == 'Parzen':
+        elif options['kernel'] == 'Parzen':
             if a_coef <= .5:
                 weight = 1 - 6*d_coef**2 * (1-a_coef)
             elif a_coef <= 1:
@@ -61,7 +65,7 @@ def hac(vectors, kernel='SU', band=0):
             else:
                 weight = 0
         # Andrews (1991)
-        elif kernel == 'Quadratic':
+        elif options['kernel'] == 'Quadratic':
             weight = 25 / (12*(d_coef*pi)**2) \
                 * (sin(m_coef)/m_coef - cos(m_coef))
 

@@ -80,11 +80,12 @@ def simulate_data():
     
 def test_mygmm():
     
+    options = {'iter' : 2}
     data, theta_true = simulate_data()
     # Initialize GMM object
     model = Model(data)
     # Estimate model with GMM
-    model.gmmest(theta_true*2)
+    model.gmmest(theta_true*2, **options)
     # Print results
     model.print_results()
     

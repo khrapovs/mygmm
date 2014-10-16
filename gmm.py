@@ -17,11 +17,9 @@ class GMM(object):
     """
 
     def __init__(self):
-        
-        # Default options:
 
-        # Number of GMM steps
-        self.iter = 2
+        # Default options:
+        self.options = {'iter' : 2}
         # Maximum iterations for the optimizer
         self.maxiter = None
         # Optimization method
@@ -81,24 +79,24 @@ class GMM(object):
         print('p-value = %0.2f' % self.pval)
         print('-' * 60)
 
-
-    def gmmest(self, theta_start):
+    def gmmest(self, theta_start, **kwargs):
         """Multiple step GMM estimation procedure.
 
         """
+        self.options.update(kwargs)
+        
         self.theta = theta_start.copy()
-        g, dg = self.moment(self.theta)
-        self.T, self.q = g.shape
-        self.k = len(self.theta)
+        g = self.moment(self.theta)[0]
+        T, q = g.shape
+        k = len(self.theta)
         # Number of degrees of freedom
-        self.df = self.q - self.k
-        # HAC kernel bandwidth
-        self.band = int(self.T**(1/3))
+        self.df = q - k
+        
 
         # Weighting matrix
-        self.W = np.eye(self.q)
+        self.W = np.eye(q)
         # First step GMM
-        for i in range(self.iter):
+        for i in range(self.options['iter']):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
@@ -117,17 +115,18 @@ class GMM(object):
         # k x k
         V = self.varest(self.theta)
         # J-statistic
-        self.jstat = self.res.fun * self.T
+        self.jstat = self.res.fun * T
         # p-value of the J-test, scalar
         self.pval = 1 - stats.chi2.cdf(self.jstat, self.df)
         # t-stat for each parameter, 1 x k
         self.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k
         self.tstat = self.theta / self.se
-    
+
     def callback(self, theta):
+        """Callback function. Prints at each optimization iteration."""
         pass
-        
+
     def gmmobjective(self, theta):
         """GMM objective function and its gradient.
 
@@ -178,8 +177,8 @@ class GMM(object):
 
         """
         # q x q
-        S = hac(g, self.kernel, self.band)
-        
+        S = hac(g, **self.options)
+
         return linalg.pinv(S)
 
     def varest(self, theta):
@@ -203,7 +202,7 @@ class GMM(object):
         S = self.weights(g)
         # k x k
         # What if k = 1?
-        V = linalg.pinv(dg.T.dot(S).dot(dg)) / self.T
+        V = linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
 
         return V
 

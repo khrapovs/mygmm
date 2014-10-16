@@ -18,18 +18,6 @@ class GMM(object):
 
     def __init__(self):
 
-        # Default options:
-        self.options = {'iter' : 2}
-        # Maximum iterations for the optimizer
-        self.maxiter = None
-        # Optimization method
-        self.method = 'BFGS'
-        # Display convergence results
-        self.disp = False
-        # Use analytic Jacobian?
-        self.use_jacob = True
-        # HAC kernel type
-        self.kernel = 'Bartlett'
         # J-statistic
         self.jstat = None
         # Optimization results
@@ -40,7 +28,26 @@ class GMM(object):
         self.tstat = None
         # P-values
         self.pval = None
-
+        # initialize class options        
+        self.set_default_options()
+    
+    def set_default_options(self):
+        """Set default options.
+        
+        """
+        # Default options:
+        self.options = dict()
+        # Number of GMM steps
+        self.options['iter'] = 2
+        # Optimization method
+        self.options['method'] = 'BFGS'
+        # Use Jacobian in optimization? Right now it has to be provided anyway.
+        self.options['use_jacob'] = True
+        # Display convergence results
+        self.options['disp'] = False
+        # HAC kernel type
+        self.options['kernel'] = 'Bartlett'
+        
     def moment(self, theta):
         """Moment function.
 
@@ -85,6 +92,7 @@ class GMM(object):
         """
         self.options.update(kwargs)
         
+        # Initialize theta to hold estimator
         self.theta = theta_start.copy()
         g = self.moment(self.theta)[0]
         T, q = g.shape
@@ -92,7 +100,6 @@ class GMM(object):
         # Number of degrees of freedom
         self.df = q - k
         
-
         # Weighting matrix
         self.W = np.eye(q)
         # First step GMM
@@ -103,11 +110,10 @@ class GMM(object):
                 g = self.moment(self.theta)[0]
                 self.W = self.weights(g)
 
-            opt_options = {'disp' : self.disp, 'maxiter' : self.maxiter}
+            #opt_options = {'disp' : self.options['disp'], 'maxiter' : self.options['maxiter']}
             self.res = minimize(self.gmmobjective, self.theta,
-                                method=self.method,
-                                jac=self.use_jacob,
-                                options=opt_options,
+                                method=self.options['method'],
+                                jac=self.options['use_jacob'],
                                 callback=self.callback)
             # Update parameter for the next step
             self.theta = self.res.x
@@ -153,7 +159,7 @@ class GMM(object):
         f = float(g.dot(self.W).dot(g.T))
         assert f >= 0, 'Objective function should be non-negative'
 
-        if self.use_jacob:
+        if self.options['use_jacob']:
             # 1 x k
             df = 2 * g.dot(self.W).dot(dg).flatten()
 
@@ -197,11 +203,12 @@ class GMM(object):
         """
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
+        # TODO : What if Jacobian is not returned?
         g, dg = self.moment(theta)
         # q x q
         S = self.weights(g)
         # k x k
-        # What if k = 1?
+        # TODO : What if k = 1?
         V = linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
 
         return V

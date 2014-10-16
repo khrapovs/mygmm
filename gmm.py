@@ -123,10 +123,10 @@ class GMM(object):
                 g = self.momcond(theta)[0]
                 W = self.__weights(g)
 
-            output = minimize(self.gmmobjective, theta, args=(W,),
+            output = minimize(self.__gmmobjective, theta, args=(W,),
                               method=self.options['method'],
                               jac=self.options['use_jacob'],
-                              callback=self.callback)
+                              callback=self.__callback)
             # Update parameter for the next step
             theta = output.x
 
@@ -149,11 +149,11 @@ class GMM(object):
         # t-stat for each parameter, 1 x k
         self.results.tstat = self.results.theta / self.results.se
 
-    def callback(self, theta):
+    def __callback(self, theta):
         """Callback function. Prints at each optimization iteration."""
         pass
 
-    def gmmobjective(self, theta, W):
+    def __gmmobjective(self, theta, W):
         """GMM objective function and its gradient.
 
         Parameters

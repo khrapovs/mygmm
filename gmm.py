@@ -126,7 +126,7 @@ class GMM(object):
             output = minimize(self.__gmmobjective, theta, args=(W,),
                               method=self.options['method'],
                               jac=self.options['use_jacob'],
-                              callback=self.__callback)
+                              callback=self.callback)
             # Update parameter for the next step
             theta = output.x
 
@@ -134,9 +134,9 @@ class GMM(object):
         # J-statistic
         self.results.jstat = output.fun
 
-        self.descriptive_stat()
+        self.__descriptive_stat()
 
-    def descriptive_stat(self):
+    def __descriptive_stat(self):
         """Compute descriptive statistics.
 
         """
@@ -149,7 +149,7 @@ class GMM(object):
         # t-stat for each parameter, 1 x k
         self.results.tstat = self.results.theta / self.results.se
 
-    def __callback(self, theta):
+    def callback(self, theta):
         """Callback function. Prints at each optimization iteration."""
         pass
 

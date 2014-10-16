@@ -69,7 +69,7 @@ def hac(vectors, kernel='SU', band=0):
             raise Exception('Kernel is not yet implemented')
 
         # q x q
-        gamma = np.dot(vectors[:-lag-1].T, vectors[lag+1:]) / length
+        gamma = vectors[:-lag-1].T.dot(vectors[lag+1:]) / length
         # q x q, w is scalar
         covar += weight * (gamma + gamma.T)
 

@@ -6,7 +6,8 @@
 from __future__ import print_function, division
 
 import numpy as np
-from scipy import stats, linalg
+from scipy.linalg import pinv
+from scipy.stats import chi2
 from scipy.optimize import minimize
 
 from MyGMM.hac import hac
@@ -17,6 +18,8 @@ class Results(object):
     def __init__(self):
         """Initialize the class.
         """
+        # Degrees of freedom
+        self.df = None
         # J-statistic
         self.jstat = None
         # Optimization results
@@ -27,8 +30,8 @@ class Results(object):
         self.tstat = None
         # P-values
         self.jpval = None
-        
-        
+
+
 class GMM(object):
     """GMM estimation class.
 
@@ -37,14 +40,14 @@ class GMM(object):
     def __init__(self):
         """Initialize the class.
         """
-        # initialize class options        
+        # initialize class options
         self.__set_default_options()
         # initialize Results instance
         self.results = Results()
-    
+
     def __set_default_options(self):
         """Set default options.
-        
+
         """
         # Default options:
         self.options = dict()
@@ -58,7 +61,7 @@ class GMM(object):
         self.options['disp'] = False
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
-    
+
     def moment(self, theta):
         """Moment function.
 
@@ -101,7 +104,7 @@ class GMM(object):
 
         """
         self.options.update(kwargs)
-        
+
         # Initialize theta to hold estimator
         theta = theta_start.copy()
         g = self.moment(theta)[0]
@@ -109,7 +112,7 @@ class GMM(object):
         k = len(theta)
         # Number of degrees of freedom
         self.results.df = q - k
-        
+
         # Weighting matrix
         W = np.eye(q)
         # First step GMM
@@ -121,32 +124,31 @@ class GMM(object):
                 W = self.__weights(g)
 
             output = minimize(self.gmmobjective, theta, args=(W,),
-                                method=self.options['method'],
-                                jac=self.options['use_jacob'],
-                                callback=self.callback)
+                              method=self.options['method'],
+                              jac=self.options['use_jacob'],
+                              callback=self.callback)
             # Update parameter for the next step
             theta = output.x
-        
+
         self.results.theta = theta
         # J-statistic
         self.results.jstat = output.fun
 
-        self.results_stat()
-    
-    def results_stat(self):
+        self.descriptive_stat()
+
+    def descriptive_stat(self):
         """Compute descriptive statistics.
-        
+
         """
         # k x k
         V = self.varest(self.results.theta)
         # p-value of the J-test, scalar
-        self.results.jpval = 1 - stats.chi2.cdf(self.results.jstat,
-                                                self.results.df)
+        self.results.jpval = 1 - chi2.cdf(self.results.jstat, self.results.df)
         # t-stat for each parameter, 1 x k
         self.results.se = np.diag(V)**.5
         # t-stat for each parameter, 1 x k
         self.results.tstat = self.results.theta / self.results.se
-        
+
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration."""
         pass
@@ -202,7 +204,7 @@ class GMM(object):
             Inverse of moments covariance matrix
 
         """
-        return linalg.pinv(hac(g, **self.options))
+        return pinv(hac(g, **self.options))
 
     def varest(self, theta):
         """Estimate variance matrix of parameters.
@@ -226,7 +228,7 @@ class GMM(object):
         S = self.__weights(g)
         # k x k
         # TODO : What if k = 1?
-        return linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
+        return pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
 
 if __name__ == '__main__':
     import test_mygmm

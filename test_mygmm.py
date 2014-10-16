@@ -16,10 +16,10 @@ class Model(GMM):
         self.data = data
         super(Model, self).__init__()
     
-    def moment(self, theta):
-        return moment(theta, self.data)
+    def momcond(self, theta):
+        return momcond(theta, self.data)
 
-def moment(theta, data):
+def momcond(theta, data):
     """Moment function, problem specific.
     
     Args:

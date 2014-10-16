@@ -62,10 +62,10 @@ class GMM(object):
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
 
-    def moment(self, theta):
+    def momcond(self, theta):
         """Moment function.
 
-        Computes moment restrictions and their gradients.
+        Computes momcond restrictions and their gradients.
         Should be written for each specific problem.
 
         Parameters
@@ -76,9 +76,9 @@ class GMM(object):
         Returns
         -------
         g : (T, q) array
-            Matrix of moment restrictions
+            Matrix of momcond restrictions
         dg : (q, k) array
-            Gradient of moment restrictions. Mean over observations
+            Gradient of momcond restrictions. Mean over observations
 
         """
         pass
@@ -107,7 +107,7 @@ class GMM(object):
 
         # Initialize theta to hold estimator
         theta = theta_start.copy()
-        g = self.moment(theta)[0]
+        g = self.momcond(theta)[0]
         q = g.shape[1]
         k = len(theta)
         # Number of degrees of freedom
@@ -120,7 +120,7 @@ class GMM(object):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
-                g = self.moment(theta)[0]
+                g = self.momcond(theta)[0]
                 W = self.__weights(g)
 
             output = minimize(self.gmmobjective, theta, args=(W,),
@@ -141,7 +141,7 @@ class GMM(object):
 
         """
         # k x k
-        V = self.varest(self.results.theta)
+        V = self.__varest(self.results.theta)
         # p-value of the J-test, scalar
         self.results.jpval = 1 - chi2.cdf(self.results.jstat, self.results.df)
         # t-stat for each parameter, 1 x k
@@ -172,11 +172,11 @@ class GMM(object):
             Depends on the switch 'use_jacob'
         """
         #theta = theta.flatten()
-        # g - T x q, time x number of moments
-        # dg - q x k, time x number of moments
-        g, dg = self.moment(theta)
+        # g - T x q, time x number of momconds
+        # dg - q x k, time x number of momconds
+        g, dg = self.momcond(theta)
         T = g.shape[0]
-        # g - 1 x q, 1 x number of moments
+        # g - 1 x q, 1 x number of momconds
         g = g.mean(0)
         gW = g.dot(W)
         f = float(gW.dot(g.T)) * T
@@ -201,12 +201,12 @@ class GMM(object):
         Returns
         -------
         (q, q) array
-            Inverse of moments covariance matrix
+            Inverse of momconds covariance matrix
 
         """
         return pinv(hac(g, **self.options))
 
-    def varest(self, theta):
+    def __varest(self, theta):
         """Estimate variance matrix of parameters.
 
         Parameters
@@ -220,10 +220,10 @@ class GMM(object):
             Variance matrix of parameters
 
         """
-        # g - T x q, time x number of moments
-        # dg - q x k, time x number of moments
+        # g - T x q, time x number of momconds
+        # dg - q x k, time x number of momconds
         # TODO : What if Jacobian is not returned?
-        g, dg = self.moment(theta)
+        g, dg = self.momcond(theta)
         # q x q
         S = self.__weights(g)
         # k x k

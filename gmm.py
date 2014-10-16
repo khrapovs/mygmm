@@ -130,19 +130,18 @@ class GMM(object):
             # Update parameter for the next step
             theta = output.x
 
-        # Final theta
-        self.results.theta = theta
-        # Number of degrees of freedom
-        self.results.degf = nmoms - len(theta)
-        # J-statistic
-        self.results.jstat = output.fun
+        self.__descriptive_stat(output, weight_mat)
 
-        self.__descriptive_stat()
-
-    def __descriptive_stat(self):
+    def __descriptive_stat(self, output, weight_mat):
         """Compute descriptive statistics.
 
         """
+        # Final theta
+        self.results.theta = output.x
+        # Number of degrees of freedom
+        self.results.degf = weight_mat.shape[0] - output.x.shape[0]
+        # J-statistic
+        self.results.jstat = output.fun
         # Variance matrix of parameters
         var_theta = self.__varest(self.results.theta)
         # p-value of the J-test, scalar

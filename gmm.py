@@ -29,9 +29,9 @@ class GMM(object):
         # P-values
         self.pval = None
         # initialize class options        
-        self.set_default_options()
+        self.__set_default_options()
     
-    def set_default_options(self):
+    def __set_default_options(self):
         """Set default options.
         
         """
@@ -56,15 +56,15 @@ class GMM(object):
 
         Parameters
         ----------
-            theta: (k,) array
-                Parameters
+        theta: (k,) array
+            Parameters
 
         Returns
         -------
-            g : (T, q) array
-                Matrix of moment restrictions
-            dg : (q, k)
-                Gradient of moment restrictions. Mean over observations
+        g : (T, q) array
+            Matrix of moment restrictions
+        dg : (q, k) array
+            Gradient of moment restrictions. Mean over observations
 
         """
         pass
@@ -101,17 +101,17 @@ class GMM(object):
         self.df = q - k
         
         # Weighting matrix
-        self.W = np.eye(q)
+        W = np.eye(q)
         # First step GMM
         for i in range(self.options['iter']):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
                 g = self.moment(self.theta)[0]
-                self.W = self.weights(g)
+                W = self.weights(g)
 
             #opt_options = {'disp' : self.options['disp'], 'maxiter' : self.options['maxiter']}
-            self.res = minimize(self.gmmobjective, self.theta,
+            self.res = minimize(self.gmmobjective, self.theta, args=(W,),
                                 method=self.options['method'],
                                 jac=self.options['use_jacob'],
                                 callback=self.callback)
@@ -133,36 +133,37 @@ class GMM(object):
         """Callback function. Prints at each optimization iteration."""
         pass
 
-    def gmmobjective(self, theta):
+    def gmmobjective(self, theta, W):
         """GMM objective function and its gradient.
 
         Parameters
         ----------
-            theta: (k,) array
-                Parameters
+        theta : (k,) array
+            Parameters
+        W : (q, q) array
+            Weighting matrix
 
         Returns
         -------
-            f : float
-                Value of objective function, see Hansen (2012, p.241)
-            df : (k,) array
-                Derivative of objective function.
-                Depends on the switch 'use_jacob'
+        f : float
+            Value of objective function, see Hansen (2012, p.241)
+        df : (k,) array
+            Derivative of objective function.
+            Depends on the switch 'use_jacob'
         """
         #theta = theta.flatten()
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
         g, dg = self.moment(theta)
         # g - 1 x q, 1 x number of moments
-        g = g.mean(0).flatten()
-        # 1 x 1
-        f = float(g.dot(self.W).dot(g.T))
+        g = g.mean(0)
+        gW = g.dot(W)
+        f = float(gW.dot(g.T))
         assert f >= 0, 'Objective function should be non-negative'
 
         if self.options['use_jacob']:
             # 1 x k
-            df = 2 * g.dot(self.W).dot(dg).flatten()
-
+            df = 2 * gW.dot(dg).flatten()
             return f, df
         else:
             return f
@@ -173,32 +174,29 @@ class GMM(object):
 
         Parameters
         ----------
-            g : (T, q) array
-                Moment restrictions
+        g : (T, q) array
+            Moment restrictions
 
         Returns
         -------
-            invS : (q, q) array
-                Inverse of moments covariance matrix
+        (q, q) array
+            Inverse of moments covariance matrix
 
         """
-        # q x q
-        S = hac(g, **self.options)
-
-        return linalg.pinv(S)
+        return linalg.pinv(hac(g, **self.options))
 
     def varest(self, theta):
         """Estimate variance matrix of parameters.
 
         Parameters
         ----------
-            theta : (k,)
-                Parameters
+        theta : (k,)
+            Parameters
 
         Returns
         -------
-            V : (k, k) array
-                Variance matrix of parameters
+        V : (k, k) array
+            Variance matrix of parameters
 
         """
         # g - T x q, time x number of moments
@@ -209,9 +207,7 @@ class GMM(object):
         S = self.weights(g)
         # k x k
         # TODO : What if k = 1?
-        V = linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
-
-        return V
+        return linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]
 
 if __name__ == '__main__':
     import test_mygmm

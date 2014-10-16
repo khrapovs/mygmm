@@ -39,9 +39,9 @@ def hac(vectors, kernel='SU', band=0):
     for lag in range(band):
 
         # Some constants
-        a_coef = (lag + 1) / (band + 1)
-        d_coef = (lag + 1) / band
-        m_coef = 6 * pi * d_coef / 5
+        a_coef = (lag+1)/(band+1)
+        d_coef = (lag+1)/band
+        m_coef = 6*pi*d_coef/5
 
         # Serially Uncorrelated
         if kernel == 'SU':
@@ -49,15 +49,15 @@ def hac(vectors, kernel='SU', band=0):
         # Newey West (1987)
         elif 'Bartlett':
             if a_coef <= 1:
-                weight = 1 - a_coef
+                weight = 1-a_coef
             else:
                 weight = 0
         # Gallant (1987)
         elif kernel == 'Parzen':
             if a_coef <= .5:
-                weight = 1 - 6 * d_coef**2 * (1 - a_coef)
-            elif a_coef <= 1.:
-                weight = 2 * (1 - a_coef)**3
+                weight = 1 - 6*d_coef**2 * (1-a_coef)
+            elif a_coef <= 1:
+                weight = 2*(1-a_coef)**3
             else:
                 weight = 0
         # Andrews (1991)
@@ -69,7 +69,7 @@ def hac(vectors, kernel='SU', band=0):
             raise Exception('Kernel is not yet implemented')
 
         # q x q
-        gamma = np.dot(vectors[:-lag-1, :].T, vectors[lag+1:, :]) / length
+        gamma = np.dot(vectors[:-lag-1].T, vectors[lag+1:]) / length
         # q x q, w is scalar
         covar += weight * (gamma + gamma.T)
 

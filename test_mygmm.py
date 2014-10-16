@@ -52,7 +52,7 @@ def simulate_data():
         beta: true parameter
     """
     # Number of observations
-    T = 1e6
+    T = 1e5
     # Correlation
     rho = .9
     # True parameter

@@ -11,13 +11,12 @@ from scipy.optimize import minimize
 
 from MyGMM.hac import hac
 
-class GMM(object):
-    """GMM estimation class.
-
+class Results(object):
+    """Class to hold estimation results.
     """
-
     def __init__(self):
-
+        """Initialize the class.
+        """
         # J-statistic
         self.jstat = None
         # Optimization results
@@ -27,9 +26,21 @@ class GMM(object):
         # T-statistics
         self.tstat = None
         # P-values
-        self.pval = None
+        self.jpval = None
+        
+        
+class GMM(object):
+    """GMM estimation class.
+
+    """
+
+    def __init__(self):
+        """Initialize the class.
+        """
         # initialize class options        
         self.__set_default_options()
+        # initialize Results instance
+        self.results = Results()
     
     def __set_default_options(self):
         """Set default options.
@@ -47,7 +58,7 @@ class GMM(object):
         self.options['disp'] = False
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
-        
+    
     def moment(self, theta):
         """Moment function.
 
@@ -77,13 +88,12 @@ class GMM(object):
 
         print('-' * 60)
         print('The final results are')
-        print(self.res.message)
-        print('theta   = ', self.theta)
-        print('s.e.    = ', self.se)
-        print('t-stat  = ', self.tstat)
-        print('J-stat  = %0.2f' % self.jstat)
-        print('df      = ', self.df)
-        print('p-value = %0.2f' % self.pval)
+        print('theta   = ', self.results.theta)
+        print('s.e.    = ', self.results.se)
+        print('t-stat  = ', self.results.tstat)
+        print('J-stat  = %0.2f' % self.results.jstat)
+        print('df      = ', self.results.df)
+        print('p-value = %0.2f' % self.results.jpval)
         print('-' * 60)
 
     def gmmest(self, theta_start, **kwargs):
@@ -93,12 +103,12 @@ class GMM(object):
         self.options.update(kwargs)
         
         # Initialize theta to hold estimator
-        self.theta = theta_start.copy()
-        g = self.moment(self.theta)[0]
-        T, q = g.shape
-        k = len(self.theta)
+        theta = theta_start.copy()
+        g = self.moment(theta)[0]
+        q = g.shape[1]
+        k = len(theta)
         # Number of degrees of freedom
-        self.df = q - k
+        self.results.df = q - k
         
         # Weighting matrix
         W = np.eye(q)
@@ -107,28 +117,36 @@ class GMM(object):
             # Compute optimal weighting matrix
             # Only after the first step
             if i > 0:
-                g = self.moment(self.theta)[0]
-                W = self.weights(g)
+                g = self.moment(theta)[0]
+                W = self.__weights(g)
 
-            #opt_options = {'disp' : self.options['disp'], 'maxiter' : self.options['maxiter']}
-            self.res = minimize(self.gmmobjective, self.theta, args=(W,),
+            output = minimize(self.gmmobjective, theta, args=(W,),
                                 method=self.options['method'],
                                 jac=self.options['use_jacob'],
                                 callback=self.callback)
             # Update parameter for the next step
-            self.theta = self.res.x
-
-        # k x k
-        V = self.varest(self.theta)
+            theta = output.x
+        
+        self.results.theta = theta
         # J-statistic
-        self.jstat = self.res.fun * T
-        # p-value of the J-test, scalar
-        self.pval = 1 - stats.chi2.cdf(self.jstat, self.df)
-        # t-stat for each parameter, 1 x k
-        self.se = np.diag(V)**.5
-        # t-stat for each parameter, 1 x k
-        self.tstat = self.theta / self.se
+        self.results.jstat = output.fun
 
+        self.results_stat()
+    
+    def results_stat(self):
+        """Compute descriptive statistics.
+        
+        """
+        # k x k
+        V = self.varest(self.results.theta)
+        # p-value of the J-test, scalar
+        self.results.jpval = 1 - stats.chi2.cdf(self.results.jstat,
+                                                self.results.df)
+        # t-stat for each parameter, 1 x k
+        self.results.se = np.diag(V)**.5
+        # t-stat for each parameter, 1 x k
+        self.results.tstat = self.results.theta / self.results.se
+        
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration."""
         pass
@@ -155,20 +173,21 @@ class GMM(object):
         # g - T x q, time x number of moments
         # dg - q x k, time x number of moments
         g, dg = self.moment(theta)
+        T = g.shape[0]
         # g - 1 x q, 1 x number of moments
         g = g.mean(0)
         gW = g.dot(W)
-        f = float(gW.dot(g.T))
+        f = float(gW.dot(g.T)) * T
         assert f >= 0, 'Objective function should be non-negative'
 
         if self.options['use_jacob']:
             # 1 x k
-            df = 2 * gW.dot(dg).flatten()
+            df = 2 * gW.dot(dg) * T
             return f, df
         else:
             return f
 
-    def weights(self, g):
+    def __weights(self, g):
         """
         Optimal weighting matrix
 
@@ -204,7 +223,7 @@ class GMM(object):
         # TODO : What if Jacobian is not returned?
         g, dg = self.moment(theta)
         # q x q
-        S = self.weights(g)
+        S = self.__weights(g)
         # k x k
         # TODO : What if k = 1?
         return linalg.pinv(dg.T.dot(S).dot(dg)) / g.shape[0]

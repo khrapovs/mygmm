@@ -12,9 +12,13 @@ from scipy.optimize import minimize
 
 from MyGMM.hac import hac
 
+
 class Results(object):
+
     """Class to hold estimation results.
+
     """
+
     def __init__(self):
         """Initialize the class.
         """
@@ -46,6 +50,7 @@ class Results(object):
 
 
 class GMM(object):
+
     """GMM estimation class.
 
     """
@@ -75,7 +80,7 @@ class GMM(object):
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
 
-    def momcond(self, theta):
+    def momcond(self, theta, **kwargs):
         """Moment function.
 
         Computes momcond restrictions and their gradients.
@@ -83,8 +88,10 @@ class GMM(object):
 
         Parameters
         ----------
-        theta: (k,) array
+        theta : (k,) array
             Parameters
+        kwargs : dict
+            Any additional keyword arguments
 
         Returns
         -------
@@ -114,7 +121,7 @@ class GMM(object):
 
         # First step GMM
         for i in range(self.options['iter']):
-            moment = self.momcond(theta)[0]
+            moment = self.momcond(theta, **kwargs)[0]
             nmoms = moment.shape[1]
             # Compute optimal weighting matrix
             # Only after the first step
@@ -229,6 +236,7 @@ class GMM(object):
         var_moment = self.__weights(moment)
         # TODO : What if k = 1?
         return pinv(dmoment.T.dot(var_moment).dot(dmoment)) / moment.shape[0]
+
 
 if __name__ == '__main__':
     import test_mygmm

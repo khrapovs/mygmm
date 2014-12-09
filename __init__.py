@@ -1,2 +1,2 @@
 from .gmm import GMM, Results
-from .hac import hac
+from .hac_function import hac

@@ -10,7 +10,7 @@ from scipy.linalg import pinv
 from scipy.stats import chi2
 from scipy.optimize import minimize
 
-from MyGMM import hac
+from hac_function import hac
 
 
 class Results(object):

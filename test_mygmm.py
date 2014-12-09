@@ -1,7 +1,5 @@
-# To use the module from a different location, do:
-# import sys
-# sys.path.append("~/Dropbox/Computation/Python/MyGMM")
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 

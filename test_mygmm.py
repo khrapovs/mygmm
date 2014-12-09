@@ -5,9 +5,11 @@
 import numpy as np
 import pandas as pd
 
-from MyGMM.gmm import GMM
+from MyGMM import GMM
+
 
 class Model(GMM):
+
     """Model moment restrictions and Jacobian.
 
     Inherits from GMM class.
@@ -37,7 +39,7 @@ def momcond(theta, data, **kwargs):
     # T x q
     g = (error * data['Z'].T).T
     # q x k
-    dg = (de[:,np.newaxis,:] * data['Z'][:,:,np.newaxis]).mean(0)
+    dg = (de[:, np.newaxis, :] * data['Z'][:, :, np.newaxis]).mean(0)
 
     return g, dg
 

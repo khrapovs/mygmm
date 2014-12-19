@@ -9,6 +9,8 @@ from __future__ import division
 from math import cos, sin, pi
 #import numpy as np
 
+__all__ = ['hac']
+
 def hac(vectors, **kwargs):
     """HAC estimator of the long-run variance matrix of u.
 
@@ -30,10 +32,10 @@ def hac(vectors, **kwargs):
 
     """
     length = vectors.shape[0]
-    
-    options = {'kernel' : 'SU', 'band' : int(length**(1/3))}
+
+    options = {'kernel': 'SU', 'band': int(length**(1/3))}
     options.update(kwargs)
-    
+
     # Demean to improve covariance estimate in small samples
     # T x q
     vectors -= vectors.mean(0)

@@ -3,6 +3,7 @@
 """GMM estimator.
 
 """
+
 from __future__ import print_function, division
 
 import numpy as np
@@ -10,8 +11,12 @@ from scipy.linalg import pinv
 from scipy.stats import chi2
 from scipy.optimize import minimize
 
-from MyGMM.hac_function import hac
+from .hac_function import hac
 
+__author__ = "Stanislav Khrapov"
+__email__ = "khrapovs@gmail.com"
+
+__all__ = ['GMM', 'Results']
 
 class Results(object):
 
@@ -243,5 +248,4 @@ class GMM(object):
 
 
 if __name__ == '__main__':
-    import test_mygmm
-    test_mygmm.test_mygmm()
+    pass

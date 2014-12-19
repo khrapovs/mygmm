@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 
-from MyGMM import GMM
+from mygmm.mygmm import GMM
 
 
 class Model(GMM):

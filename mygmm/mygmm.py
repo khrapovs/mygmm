@@ -61,10 +61,11 @@ class GMM(object):
 
     Attributes
     ----------
+    momcond
 
     Methods
     -------
-
+    gmmest
 
     """
 
@@ -90,17 +91,8 @@ class GMM(object):
         self.options['method'] = 'BFGS'
         # Use Jacobian in optimization? Right now it has to be provided anyway.
         self.options['use_jacob'] = True
-        # Display convergence results
-        self.options['disp'] = False
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
-
-    def print_results(self):
-        """Print GMM estimation results.
-
-        """
-        np.set_printoptions(precision=3, suppress=True)
-        self.results.print_results()
 
     def gmmest(self, theta_start, **kwargs):
         """Multiple step GMM estimation procedure.

@@ -6,3 +6,5 @@ MyGMM
 =====
 
 My own implementation of the GMM estimator for educational purposes.
+
+`Documentation <http://mygmm.readthedocs.org/en/latest/>`_

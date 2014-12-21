@@ -21,3 +21,4 @@
 *.png
 *.dat
 .ipynb_checkpoints
+build/

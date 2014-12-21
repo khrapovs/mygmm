@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/mygmm/badge/?version=latest
+	:target: https://readthedocs.org/projects/mygmm/?badge=latest
+	:alt: Documentation Status
+
 MyGMM
 =====
 

@@ -18,6 +18,7 @@ __email__ = "khrapovs@gmail.com"
 
 __all__ = ['GMM', 'Results']
 
+
 class Results(object):
 
     """Class to hold estimation results.
@@ -58,11 +59,20 @@ class GMM(object):
 
     """GMM estimation class.
 
+    Attributes
+    ----------
+
+    Methods
+    -------
+
+
     """
 
-    def __init__(self):
+    def __init__(self, momcond):
         """Initialize the class.
         """
+        # Moment conditions
+        self.momcond = momcond
         # Default options:
         self.options = dict()
         # initialize class options
@@ -84,29 +94,6 @@ class GMM(object):
         self.options['disp'] = False
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
-
-    def momcond(self, theta, **kwargs):
-        """Moment function.
-
-        Computes momcond restrictions and their gradients.
-        Should be written for each specific problem.
-
-        Parameters
-        ----------
-        theta : (k,) array
-            Parameters
-        kwargs : dict
-            Any additional keyword arguments
-
-        Returns
-        -------
-        moment : (T, q) array
-            Matrix of momcond restrictions
-        dmoment : (q, k) array
-            Gradient of momcond restrictions. Mean over observations
-
-        """
-        pass
 
     def print_results(self):
         """Print GMM estimation results.

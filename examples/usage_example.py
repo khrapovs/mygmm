@@ -3,43 +3,56 @@
 import numpy as np
 import pandas as pd
 
-from mygmm.mygmm import GMM
+from mygmm import GMM
 
 
-class Model(GMM):
+class Model(object):
 
     """Model moment restrictions and Jacobian.
 
-    Inherits from GMM class.
     """
+
     def __init__(self, data):
         self.data = data
-        super(Model, self).__init__()
 
     def momcond(self, theta, **kwargs):
-        return momcond(theta, self.data, **kwargs)
+        """Moment function.
 
+        Computes momcond restrictions and their gradients.
+        Should be written for each specific problem.
 
-def momcond(theta, data, **kwargs):
-    """Moment function, problem specific.
+        Parameters
+        ----------
+        theta : (k,) array
+            Parameters
+        kwargs : dict
+            Any additional keyword arguments
 
-    Args:
-        theta : vector, 1 x k
+        Returns
+        -------
+        moment : (T, q) array
+            Matrix of momcond restrictions
+        dmoment : (q, k) array
+            Gradient of momcond restrictions. Mean over observations
 
-    Returns:
-        g : T x q, matrix of moment restrictions
-        dg : q x k, gradient of moment restrictions. Mean over observations
-    """
-    # T x 1
-    error = data['Y'] - data['X'].dot(theta)
-    # T x k
-    de = -data['X']
-    # T x q
-    g = (error * data['Z'].T).T
-    # q x k
-    dg = (de[:, np.newaxis, :] * data['Z'][:, :, np.newaxis]).mean(0)
+        """
+        # T x 1
+        error = self.data['Y'] - self.data['X'].dot(theta)
+        # T x k
+        de = -self.data['X']
+        # T x q
+        g = (error * self.data['Z'].T).T
+        # q x k
+        dg = (de[:, np.newaxis, :] * self.data['Z'][:, :, np.newaxis]).mean(0)
 
-    return g, dg
+        return g, dg
+
+    def gmmest(self, theta_start, **kwargs):
+        """Estimate model parameters using GMM.
+
+        """
+        estimator = GMM(self.momcond)
+        return estimator.gmmest(theta_start, **kwargs)
 
 
 def simulate_data():
@@ -86,9 +99,9 @@ def test_mygmm():
     # Initialize GMM object
     model = Model(data)
     # Estimate model with GMM
-    model.gmmest(theta_true*2, **options)
+    res = model.gmmest(theta_true*2, **options)
     # Print results
-    model.print_results()
+    res.print_results()
 
     # Compare with OLS
     df = pd.DataFrame(data['X'], columns = ['X1','X2'])

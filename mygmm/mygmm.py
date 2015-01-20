@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""GMM estimator.
+"""
+GMM estimator
+=============
 
 """
 
@@ -22,6 +24,21 @@ __all__ = ['GMM', 'Results']
 class Results(object):
 
     """Class to hold estimation results.
+
+    Attributes
+    ----------
+    theta : array
+        Parameter estimate
+    degf : int
+        Degrees of freedom
+    jstat : float
+        J-statistic
+    stde : float
+        Standard errors
+    tstat : float
+        t-statistics
+    jpval : float
+        p-value of the J test
 
     """
 
@@ -62,6 +79,7 @@ class GMM(object):
     Attributes
     ----------
     momcond
+        Moment function
 
     Methods
     -------
@@ -71,6 +89,17 @@ class GMM(object):
 
     def __init__(self, momcond):
         """Initialize the class.
+
+        Parameters
+        ----------
+        momcond : function
+            Moment function. Should return:
+
+                - array (nobs x nmoms)
+                    moment function values
+                - (optionally) array (nmoms x nparams)
+                    derivative of moment function average across observations.
+
         """
         # Moment conditions
         self.momcond = momcond
@@ -96,6 +125,16 @@ class GMM(object):
 
     def gmmest(self, theta_start, **kwargs):
         """Multiple step GMM estimation procedure.
+
+        Parameters
+        ----------
+        theta_start : array
+            Initial parameters
+
+        Returns
+        -------
+        instance of Results
+            Estimation results
 
         """
         self.options.update(kwargs)
@@ -146,7 +185,9 @@ class GMM(object):
         self.results.tstat = self.results.theta / self.results.stde
 
     def callback(self, theta):
-        """Callback function. Prints at each optimization iteration."""
+        """Callback function. Prints at each optimization iteration.
+
+        """
         pass
 
     def __gmmobjective(self, theta, weight_mat, kwargs):
@@ -166,6 +207,7 @@ class GMM(object):
         dvalue : (nparams,) array
             Derivative of objective function.
             Depends on the switch 'use_jacob'
+
         """
         # moment - nobs x nmoms
         # dmoment - nmoms x nparams
@@ -177,7 +219,7 @@ class GMM(object):
         value = gdotw.dot(moment.T) * nobs
         if value <= 0:
             value = 1e10
-        #assert value >= 0, 'Objective function should be non-negative'
+        # assert value >= 0, 'Objective function should be non-negative'
 
         if self.options['use_jacob']:
             # 1 x nparams

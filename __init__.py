@@ -1,1 +1,1 @@
-from .mygmm.mygmm import *
+from .mygmm import *

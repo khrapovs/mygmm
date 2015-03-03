@@ -4,31 +4,31 @@
 
 HAC - Heteroscedasticity and Autocorrelation Consistent
 """
-
 from __future__ import division
+
 from math import cos, sin, pi
-#import numpy as np
 
 __all__ = ['hac']
+
 
 def hac(vectors, **kwargs):
     """HAC estimator of the long-run variance matrix of u.
 
     Parameters
     ----------
-        vectors: (T, q) array
-            The set of q vectors for estimation of their covariance matrix.
-        kernel: str
-            Type of kernel.
-            Currenly implemented: SU, Bartlett, Parzen, Quadratic
-        band: int
-            Truncation parameter.
-            Ideally should be chosen optimally depending on the sample size!
+    vectors: (T, q) array
+        The set of q vectors for estimation of their covariance matrix.
+    kernel: str
+        Type of kernel.
+        Currenly implemented: SU, Bartlett, Parzen, Quadratic
+    band: int
+        Truncation parameter.
+        Ideally should be chosen optimally depending on the sample size!
 
     Returns
     -------
-        S: (q, q) array
-            Long-run variance matrix of u
+    covar: (q, q) array
+        Long-run variance matrix of u
 
     """
     length = vectors.shape[0]
@@ -72,7 +72,7 @@ def hac(vectors, **kwargs):
                 * (sin(m_coef)/m_coef - cos(m_coef))
 
         else:
-            raise Exception('Kernel is not yet implemented')
+            raise ValueError('Kernel is not yet implemented')
 
         # q x q
         gamma = vectors[:-lag-1].T.dot(vectors[lag+1:]) / length

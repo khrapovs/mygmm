@@ -259,6 +259,7 @@ class GMM(object):
             Variance matrix of parameters
 
         """
+        self.options.update(kwargs)
         # g - nobs x q, time x number of momconds
         # dmoment - q x k, time x number of momconds
         # TODO : What if Jacobian is not returned?

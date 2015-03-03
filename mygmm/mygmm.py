@@ -175,7 +175,7 @@ class GMM(object):
         # J-statistic
         self.results.jstat = output.fun
         # Variance matrix of parameters
-        var_theta = self.__varest(self.results.theta, **kwargs)
+        var_theta = self.varest(self.results.theta, **kwargs)
         # p-value of the J-test, scalar
         self.results.jpval = 1 - chi2.cdf(self.results.jstat,
                                           self.results.degf)
@@ -245,7 +245,7 @@ class GMM(object):
         """
         return pinv(hac(moment, **self.options))
 
-    def __varest(self, theta, **kwargs):
+    def varest(self, theta, **kwargs):
         """Estimate variance matrix of parameters.
 
         Parameters

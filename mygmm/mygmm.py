@@ -157,6 +157,7 @@ class GMM(object):
                               args=(weight_mat, kwargs),
                               method=self.options['method'],
                               jac=self.options['use_jacob'],
+                              bounds=self.options['bounds'],
                               callback=self.callback)
             # Update parameter for the next step
             theta = output.x
@@ -180,7 +181,7 @@ class GMM(object):
         self.results.jpval = 1 - chi2.cdf(self.results.jstat,
                                           self.results.degf)
         # t-stat for each parameter, 1 x k
-        self.results.stde = np.diag(var_theta)**.5
+        self.results.stde = np.abs(np.diag(var_theta))**.5
         # t-stat for each parameter, 1 x k
         self.results.tstat = self.results.theta / self.results.stde
 

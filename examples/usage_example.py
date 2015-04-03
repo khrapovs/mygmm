@@ -48,7 +48,7 @@ class Model(object):
         # q x k
         dg = (de[:, np.newaxis, :] * self.data['Z'][:, :, np.newaxis]).mean(0)
 
-        return g, dg
+        return g, None
 
     def gmmest(self, theta_start, **kwargs):
         """Estimate model parameters using GMM.

@@ -7,6 +7,8 @@ GMM estimator
 """
 from __future__ import print_function, division
 
+import warnings
+
 import numpy as np
 from scipy.linalg import pinv
 from scipy.stats import chi2
@@ -147,6 +149,8 @@ class GMM(object):
         # First step GMM
         for i in range(self.options['iter']):
             moment = self.momcond(theta, **kwargs)[0]
+            if moment.shape[1] <= theta.size:
+                warnings.warn("Not enough degrees of freedom!")
             nmoms = moment.shape[1]
             # Compute optimal weighting matrix
             # Only after the first step
@@ -247,8 +251,9 @@ class GMM(object):
             Derivative of the moment function
 
         """
-        return nd.Jacobian(lambda x:
-            self.momcond(x, **kwargs)[0].mean(0))(theta)
+        with np.errstate(divide='ignore'):
+            return nd.Jacobian(lambda x:
+                self.momcond(x, **kwargs)[0].mean(0))(theta)
 
     def __weights(self, moment, **kwargs):
         """

@@ -5,13 +5,13 @@ GMM estimator
 =============
 
 """
-
 from __future__ import print_function, division
 
 import numpy as np
 from scipy.linalg import pinv
 from scipy.stats import chi2
 from scipy.optimize import minimize
+import numdifftools as nd
 
 from .hac_function import hac
 
@@ -122,6 +122,8 @@ class GMM(object):
         self.options['use_jacob'] = True
         # HAC kernel type
         self.options['kernel'] = 'Bartlett'
+        # HAC kernel type
+        self.options['bounds'] = None
 
     def gmmest(self, theta_start, **kwargs):
         """Multiple step GMM estimation procedure.
@@ -223,11 +225,30 @@ class GMM(object):
         # assert value >= 0, 'Objective function should be non-negative'
 
         if self.options['use_jacob']:
+            if dmoment is None:
+                dmoment = self.approx_dmoment(theta, **kwargs)
             # 1 x nparams
             dvalue = 2 * gdotw.dot(dmoment) * nobs
             return value, dvalue
         else:
             return value
+
+    def approx_dmoment(self, theta, **kwargs):
+        """Approxiamte derivative of the moment function numerically.
+
+        Parameters
+        ----------
+        theta : (nparams,) array
+            Parameters
+
+        Returns
+        -------
+        (nmoms, nparams) array
+            Derivative of the moment function
+
+        """
+        return nd.Jacobian(lambda x:
+            self.momcond(x, **kwargs)[0].mean(0))(theta)
 
     def __weights(self, moment, **kwargs):
         """
@@ -263,8 +284,9 @@ class GMM(object):
         self.options.update(kwargs)
         # g - nobs x q, time x number of momconds
         # dmoment - q x k, time x number of momconds
-        # TODO : What if Jacobian is not returned?
         moment, dmoment = self.momcond(theta, **kwargs)
+        if dmoment is None:
+            dmoment = self.approx_dmoment(theta, **kwargs)
         var_moment = self.__weights(moment)
         # TODO : What if k = 1?
         return pinv(dmoment.T.dot(var_moment).dot(dmoment)) / moment.shape[0]

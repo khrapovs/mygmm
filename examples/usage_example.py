@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""Examples of using GMM class.
+
+"""
 import numpy as np
 import pandas as pd
 
@@ -58,12 +61,13 @@ class Model(object):
 def simulate_data():
     """Simulate data.
 
-    Args:
-        None
+    Returns
+    -------
+    data : dict
+        Dictionary of model specific data arrays
+    beta : array
+        True parameter
 
-    Returns:
-        data: disctionary of model specific data arrays
-        beta: true parameter
     """
     # Number of observations
     T = 1e5
@@ -74,13 +78,13 @@ def simulate_data():
     # True parameters for instruments
     gamma = np.array([1, -5, 2, 3, -1])
     # Random errors
-    e = np.random.normal(size = (T, 2))
+    e = np.random.normal(size=(T, 2))
     # Instruments
-    Z = np.random.normal(size = (T, 5))
+    Z = np.random.normal(size=(T, 5))
     # Endogenous variables
     X1 = Z.dot(gamma) + e[:,0]
     X2 = (Z**2).dot(gamma) + e[:,1]
-    X = np.concatenate((X1[:, np.newaxis], X2[:, np.newaxis]), axis = 1)
+    X = np.concatenate((X1[:, np.newaxis], X2[:, np.newaxis]), axis=1)
     # Dependent variable
     Y = X.dot(beta) + e[:,0] + rho * e[:,1]
 
@@ -88,13 +92,15 @@ def simulate_data():
     #plt.show()
 
     # Collect data for GMM
-    data = {'Y' : Y, 'X' : X, 'Z' : Z}
+    data = {'Y': Y, 'X': X, 'Z': Z}
 
     return data, beta
 
+
 def test_mygmm():
 
-    options = {'iter' : 2}
+    options = {'iter': 2, 'bounds': None,
+               'use_jacob': True, 'method': 'L-BFGS-B'}
     data, theta_true = simulate_data()
     # Initialize GMM object
     model = Model(data)
@@ -104,12 +110,14 @@ def test_mygmm():
     res.print_results()
 
     # Compare with OLS
-    df = pd.DataFrame(data['X'], columns = ['X1','X2'])
+    df = pd.DataFrame(data['X'], columns=['X1', 'X2'])
     df['Y'] = data['Y']
-    res = pd.ols(y = df['Y'], x = df[['X1','X2']], intercept = False)
+    res = pd.ols(y=df['Y'], x=df[['X1', 'X2']], intercept=False)
+
     print('\nOLS results')
     print(np.array(res.beta))
     print(np.array(res.t_stat))
+
 
 if __name__ == '__main__':
     test_mygmm()

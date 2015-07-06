@@ -22,3 +22,4 @@
 *.dat
 .ipynb_checkpoints
 build/
+*.egg-info

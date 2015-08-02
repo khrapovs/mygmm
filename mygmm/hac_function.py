@@ -74,7 +74,7 @@ def hac(vectors, kernel='SU', band=None):
                 * (sin(m_coef)/m_coef - cos(m_coef))
 
         else:
-            raise ValueError('Kernel is not yet implemented')
+            raise NotImplementedError('Kernel is not yet implemented')
 
         # q x q
         gamma = vectors[:-lag-1].T.dot(vectors[lag+1:]) / length

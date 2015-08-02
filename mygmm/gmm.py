@@ -144,12 +144,12 @@ class GMM(object):
         # assert value >= 0, 'Objective function should be non-negative'
 
         if dmoment is None:
-            dmoment = self.approx_dmoment(theta, **kwargs)
+            dmoment = self.__approx_dmoment(theta, **kwargs)
         # 1 x nparams
         dvalue = 2 * gdotw.dot(dmoment) * nobs
         return value, dvalue
 
-    def approx_dmoment(self, theta, **kwargs):
+    def __approx_dmoment(self, theta, **kwargs):
         """Approxiamte derivative of the moment function numerically.
 
         Parameters
@@ -202,7 +202,7 @@ class GMM(object):
         # dmoment - q x k, time x number of momconds
         moment, dmoment = self.momcond(theta, **kwargs)
         if dmoment is None:
-            dmoment = self.approx_dmoment(theta, **kwargs)
+            dmoment = self.__approx_dmoment(theta, **kwargs)
         var_moment = self.__weights(moment, **kwargs)
         # TODO : What if k = 1?
         return pinv(dmoment.T.dot(var_moment).dot(dmoment)) / moment.shape[0]

@@ -6,7 +6,7 @@ Generalized Method of Moments Estimator
    :maxdepth: 1
 
 .. autoclass:: mygmm.gmm.GMM
-	:members: gmmest
+	:members: __init__, gmmest
 
 .. autoclass:: mygmm.results.Results
 	:members:

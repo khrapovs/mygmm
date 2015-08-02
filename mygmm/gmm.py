@@ -66,6 +66,19 @@ class GMM(object):
         ----------
         theta_start : array
             Initial parameters
+        bounds : list of tuples
+            Bounds on parameters
+        iter : int
+            Number of GMM steps
+        method : str
+            Optimization method
+        use_jacob : bool
+            Whether to use Jacobian in optimization
+        kernel : str
+            Type of kernel for HAC.
+            Currenly implemented: SU, Bartlett, Parzen, Quadratic
+        band: int
+            Truncation parameter for HAC
 
         Returns
         -------

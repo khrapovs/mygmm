@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-#from distutils.core import setup
-from setuptools import setup, Extension, find_packages
-from setuptools.dist import Distribution
+from setuptools import setup, find_packages
 
 
 with open('README.rst') as file:
@@ -10,13 +8,12 @@ with open('README.rst') as file:
 
 setup(name='mygmm',
       version='1.0',
-      description=('GMM estimator for educational purposes'),
+      description='GMM estimator for educational purposes',
       long_description=long_description,
       author='Stanislav Khrapov',
       license='MIT',
       author_email='khrapovs@gmail.com',
       url='https://github.com/khrapovs/mygmm',
-      py_modules=['mygmm'],
       packages=find_packages(),
       keywords=['GMM', 'econometrics', 'estimation', 'moments'],
       classifiers=[
@@ -29,4 +26,4 @@ setup(name='mygmm',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
       ],
-)
+      )

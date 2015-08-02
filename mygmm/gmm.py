@@ -55,8 +55,6 @@ class GMM(object):
         # Moment conditions
         self.momcond = momcond
         self.use_jacob = True
-        # initialize Results instance
-        self.results = Results()
 
     def gmmest(self, theta_start, bounds=None, iter=2, method='BFGS',
                use_jacob=True, kernel='Bartlett', band=None, **kwargs):
@@ -110,29 +108,32 @@ class GMM(object):
             # Update parameter for the next step
             theta = output.x
 
-        self.__descriptive_stat(output, weight_mat, **kwargs)
-        self.results.opt = output
-        return self.results
+        results = self.__descriptive_stat(output, weight_mat, **kwargs)
+        results.opt = output
+        return results
 
     def __descriptive_stat(self, output, weight_mat, **kwargs):
         """Compute descriptive statistics.
 
         """
+        # initialize Results instance
+        results = Results()
         # Final theta
-        self.results.theta = output.x
+        results.theta = output.x
         # Number of degrees of freedom
-        self.results.degf = weight_mat.shape[0] - output.x.shape[0]
+        results.degf = weight_mat.shape[0] - output.x.shape[0]
         # J-statistic
-        self.results.jstat = output.fun
+        results.jstat = output.fun
         # Variance matrix of parameters
-        var_theta = self.varest(self.results.theta, **kwargs)
+        var_theta = self.varest(results.theta, **kwargs)
         # p-value of the J-test, scalar
-        self.results.jpval = 1 - chi2.cdf(self.results.jstat,
-                                          self.results.degf)
+        results.jpval = 1 - chi2.cdf(results.jstat, results.degf)
         # t-stat for each parameter, 1 x k
-        self.results.stde = np.abs(np.diag(var_theta))**.5
+        results.stde = np.abs(np.diag(var_theta))**.5
         # t-stat for each parameter, 1 x k
-        self.results.tstat = self.results.theta / self.results.stde
+        results.tstat = results.theta / results.stde
+
+        return results
 
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration.

@@ -99,8 +99,7 @@ def simulate_data():
 
 def try_mygmm():
 
-    options = {'iter': 2, 'bounds': None,
-               'use_jacob': True, 'method': 'L-BFGS-B'}
+    options = {'iter': 2, 'bounds': None, 'method': 'L-BFGS-B'}
     data, theta_true = simulate_data()
     # Initialize GMM object
     model = Model(data)

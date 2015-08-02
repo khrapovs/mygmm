@@ -9,6 +9,7 @@ from __future__ import print_function, division
 
 import numpy as np
 
+from scipy.stats import chi2
 from functools import partial
 
 __all__ = ['Results']
@@ -37,24 +38,24 @@ class Results(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, opt_out=None, var_theta=None, nmoms=None):
         """Initialize the class.
 
         """
         # Parameter estimate
-        self.theta = None
+        self.theta = opt_out.x
         # Degrees of freedom
-        self.degf = None
+        self.degf = nmoms - self.theta.size
         # J-statistic
-        self.jstat = None
+        self.jstat = opt_out.fun
         # Standard errors
-        self.stde = None
+        self.stde = np.abs(np.diag(var_theta))**.5
         # t-statistics
-        self.tstat = None
+        self.tstat = self.theta / self.stde
         # p-value of the J test
-        self.jpval = None
+        self.jpval = 1 - chi2.cdf(self.jstat, self.degf)
         # Optimization output
-        self.opt = None
+        self.opt_out = opt_out
 
     def __str__(self):
         """Print results of the estimation.

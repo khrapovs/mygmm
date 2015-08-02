@@ -13,7 +13,6 @@ import numpy as np
 import numdifftools as nd
 
 from scipy.linalg import pinv
-from scipy.stats import chi2
 from scipy.optimize import minimize
 
 from .hac_function import hac
@@ -54,10 +53,9 @@ class GMM(object):
         """
         # Moment conditions
         self.momcond = momcond
-        self.use_jacob = True
 
     def gmmest(self, theta_start, bounds=None, iter=2, method='BFGS',
-               use_jacob=True, kernel='Bartlett', band=None, **kwargs):
+               kernel='Bartlett', band=None, **kwargs):
         """Multiple step GMM estimation procedure.
 
         Parameters
@@ -70,8 +68,6 @@ class GMM(object):
             Number of GMM steps
         method : str
             Optimization method
-        use_jacob : bool
-            Whether to use Jacobian in optimization
         kernel : str
             Type of kernel for HAC.
             Currenly implemented: SU, Bartlett, Parzen, Quadratic
@@ -84,14 +80,14 @@ class GMM(object):
             Estimation results
 
         """
-        self.use_jacob = use_jacob
         # Initialize theta to hold estimator
         theta = theta_start.copy()
 
         # First step GMM
         for i in range(iter):
             moment = self.momcond(theta, **kwargs)[0]
-            if moment.shape[1] <= theta.size:
+            nmoms = moment.shape[1]
+            if nmoms - theta.size <= 0:
                 warnings.warn("Not enough degrees of freedom!")
             nmoms = moment.shape[1]
             # Compute optimal weighting matrix
@@ -101,39 +97,16 @@ class GMM(object):
             else:
                 weight_mat = self.__weights(moment, kernel=kernel, band=band)
 
-            output = minimize(self.__gmmobjective, theta,
+            opt_out = minimize(self.__gmmobjective, theta,
                               args=(weight_mat, kwargs), method=method,
-                              jac=self.use_jacob, bounds=bounds,
+                              jac=True, bounds=bounds,
                               callback=self.callback)
             # Update parameter for the next step
-            theta = output.x
+            theta = opt_out.x
 
-        results = self.__descriptive_stat(output, weight_mat, **kwargs)
-        results.opt = output
-        return results
+        var_theta = self.varest(theta, **kwargs)
 
-    def __descriptive_stat(self, output, weight_mat, **kwargs):
-        """Compute descriptive statistics.
-
-        """
-        # initialize Results instance
-        results = Results()
-        # Final theta
-        results.theta = output.x
-        # Number of degrees of freedom
-        results.degf = weight_mat.shape[0] - output.x.shape[0]
-        # J-statistic
-        results.jstat = output.fun
-        # Variance matrix of parameters
-        var_theta = self.varest(results.theta, **kwargs)
-        # p-value of the J-test, scalar
-        results.jpval = 1 - chi2.cdf(results.jstat, results.degf)
-        # t-stat for each parameter, 1 x k
-        results.stde = np.abs(np.diag(var_theta))**.5
-        # t-stat for each parameter, 1 x k
-        results.tstat = results.theta / results.stde
-
-        return results
+        return Results(opt_out=opt_out, var_theta=var_theta, nmoms=nmoms)
 
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration.
@@ -172,14 +145,11 @@ class GMM(object):
             value = 1e10
         # assert value >= 0, 'Objective function should be non-negative'
 
-        if self.use_jacob:
-            if dmoment is None:
-                dmoment = self.approx_dmoment(theta, **kwargs)
-            # 1 x nparams
-            dvalue = 2 * gdotw.dot(dmoment) * nobs
-            return value, dvalue
-        else:
-            return value
+        if dmoment is None:
+            dmoment = self.approx_dmoment(theta, **kwargs)
+        # 1 x nparams
+        dvalue = 2 * gdotw.dot(dmoment) * nobs
+        return value, dvalue
 
     def approx_dmoment(self, theta, **kwargs):
         """Approxiamte derivative of the moment function numerically.

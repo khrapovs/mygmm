@@ -70,7 +70,7 @@ def simulate_data():
 
     """
     # Number of observations
-    T = 1e5
+    T = 1e3
     # Correlation
     rho = .9
     # True parameter
@@ -97,7 +97,7 @@ def simulate_data():
     return data, beta
 
 
-def test_mygmm():
+def try_mygmm():
 
     options = {'iter': 2, 'bounds': None,
                'use_jacob': True, 'method': 'L-BFGS-B'}
@@ -105,9 +105,9 @@ def test_mygmm():
     # Initialize GMM object
     model = Model(data)
     # Estimate model with GMM
-    res = model.gmmest(theta_true*2, **options)
+    res_gmm = model.gmmest(theta_true*2, **options)
     # Print results
-    res.print_results()
+    print(res_gmm)
 
     # Compare with OLS
     df = pd.DataFrame(data['X'], columns=['X1', 'X2'])
@@ -118,6 +118,9 @@ def test_mygmm():
     print(np.array(res.beta))
     print(np.array(res.t_stat))
 
+    return res_gmm
+
 
 if __name__ == '__main__':
-    test_mygmm()
+
+    res = try_mygmm()

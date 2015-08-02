@@ -1,1 +1,2 @@
-from .mygmm import *
+from .results import *
+from .gmm import *

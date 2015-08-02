@@ -1,7 +1,12 @@
-.. automodule:: mygmm.mygmm
+=======================================
+Generalized Method of Moments Estimator
+=======================================
 
-.. autoclass:: mygmm.mygmm.GMM
-	:members: __init__, gmmest
+.. toctree::
+   :maxdepth: 1
 
-.. autoclass:: mygmm.mygmm.Results
+.. autoclass:: mygmm.gmm.GMM
+	:members: gmmest
+
+.. autoclass:: mygmm.results.Results
 	:members:

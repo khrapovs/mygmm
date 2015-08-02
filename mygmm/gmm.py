@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-GMM estimator
-=============
+GMM estimator class
+-------------------
 
 """
 from __future__ import print_function, division
@@ -10,68 +10,16 @@ from __future__ import print_function, division
 import warnings
 
 import numpy as np
+import numdifftools as nd
+
 from scipy.linalg import pinv
 from scipy.stats import chi2
 from scipy.optimize import minimize
-import numdifftools as nd
 
 from .hac_function import hac
+from .results import Results
 
-__author__ = "Stanislav Khrapov"
-__email__ = "khrapovs@gmail.com"
-
-__all__ = ['GMM', 'Results']
-
-
-class Results(object):
-
-    """Class to hold estimation results.
-
-    Attributes
-    ----------
-    theta : array
-        Parameter estimate
-    degf : int
-        Degrees of freedom
-    jstat : float
-        J-statistic
-    stde : float
-        Standard errors
-    tstat : float
-        t-statistics
-    jpval : float
-        p-value of the J test
-
-    """
-
-    def __init__(self):
-        """Initialize the class.
-        """
-        # Parameter estimate
-        self.theta = None
-        # Degrees of freedom
-        self.degf = None
-        # J-statistic
-        self.jstat = None
-        # Standard errors
-        self.stde = None
-        # t-statistics
-        self.tstat = None
-        # p-value of the J test
-        self.jpval = None
-
-    def print_results(self):
-        """Print results of the estimation.
-        """
-        print('-' * 60)
-        print('The final results are')
-        print('theta   = ', self.theta)
-        print('s.e.    = ', self.stde)
-        print('t-stat  = ', self.tstat)
-        print('J-stat  = %0.2f' % self.jstat)
-        print('df      = ', self.degf)
-        print('p-value = %0.2f' % self.jpval)
-        print('-' * 60)
+__all__ = ['GMM']
 
 
 class GMM(object):
@@ -86,6 +34,7 @@ class GMM(object):
     Methods
     -------
     gmmest
+        Multiple step GMM estimation procedure
 
     """
 
@@ -105,29 +54,12 @@ class GMM(object):
         """
         # Moment conditions
         self.momcond = momcond
-        # Default options:
-        self.options = dict()
-        # initialize class options
-        self.__set_default_options()
+        self.use_jacob = True
         # initialize Results instance
         self.results = Results()
 
-    def __set_default_options(self):
-        """Set default options.
-
-        """
-        # Number of GMM steps
-        self.options['iter'] = 2
-        # Optimization method
-        self.options['method'] = 'BFGS'
-        # Use Jacobian in optimization? Right now it has to be provided anyway.
-        self.options['use_jacob'] = True
-        # HAC kernel type
-        self.options['kernel'] = 'Bartlett'
-        # HAC kernel type
-        self.options['bounds'] = None
-
-    def gmmest(self, theta_start, **kwargs):
+    def gmmest(self, theta_start, bounds=None, iter=2, method='BFGS',
+               use_jacob=True, kernel='Bartlett', band=None, **kwargs):
         """Multiple step GMM estimation procedure.
 
         Parameters
@@ -141,13 +73,12 @@ class GMM(object):
             Estimation results
 
         """
-        self.options.update(kwargs)
-
+        self.use_jacob = use_jacob
         # Initialize theta to hold estimator
         theta = theta_start.copy()
 
         # First step GMM
-        for i in range(self.options['iter']):
+        for i in range(iter):
             moment = self.momcond(theta, **kwargs)[0]
             if moment.shape[1] <= theta.size:
                 warnings.warn("Not enough degrees of freedom!")
@@ -157,18 +88,17 @@ class GMM(object):
             if i == 0:
                 weight_mat = np.eye(nmoms)
             else:
-                weight_mat = self.__weights(moment, **kwargs)
+                weight_mat = self.__weights(moment, kernel=kernel, band=band)
 
             output = minimize(self.__gmmobjective, theta,
-                              args=(weight_mat, kwargs),
-                              method=self.options['method'],
-                              jac=self.options['use_jacob'],
-                              bounds=self.options['bounds'],
+                              args=(weight_mat, kwargs), method=method,
+                              jac=self.use_jacob, bounds=bounds,
                               callback=self.callback)
             # Update parameter for the next step
             theta = output.x
 
         self.__descriptive_stat(output, weight_mat, **kwargs)
+        self.results.opt = output
         return self.results
 
     def __descriptive_stat(self, output, weight_mat, **kwargs):
@@ -228,7 +158,7 @@ class GMM(object):
             value = 1e10
         # assert value >= 0, 'Objective function should be non-negative'
 
-        if self.options['use_jacob']:
+        if self.use_jacob:
             if dmoment is None:
                 dmoment = self.approx_dmoment(theta, **kwargs)
             # 1 x nparams
@@ -270,7 +200,7 @@ class GMM(object):
             Inverse of momconds covariance matrix
 
         """
-        return pinv(hac(moment, **self.options))
+        return pinv(hac(moment, **kwargs))
 
     def varest(self, theta, **kwargs):
         """Estimate variance matrix of parameters.
@@ -286,16 +216,11 @@ class GMM(object):
             Variance matrix of parameters
 
         """
-        self.options.update(kwargs)
         # g - nobs x q, time x number of momconds
         # dmoment - q x k, time x number of momconds
         moment, dmoment = self.momcond(theta, **kwargs)
         if dmoment is None:
             dmoment = self.approx_dmoment(theta, **kwargs)
-        var_moment = self.__weights(moment)
+        var_moment = self.__weights(moment, **kwargs)
         # TODO : What if k = 1?
         return pinv(dmoment.T.dot(var_moment).dot(dmoment)) / moment.shape[0]
-
-
-if __name__ == '__main__':
-    pass

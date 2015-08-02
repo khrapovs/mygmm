@@ -29,7 +29,8 @@ import mock
 
 MOCK_MODULES = ['numpy', 'seaborn', 'matplotlib', 'matplotlib.pylab',
                 'statsmodels', 'statsmodels.tsa', 'statsmodels.tsa.tsatools',
-                'scipy', 'scipy.stats', 'scipy.optimize', 'scipy.linalg']
+                'scipy', 'scipy.stats', 'scipy.optimize', 'scipy.linalg',
+                'numdifftools']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -131,7 +132,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+#html_theme = 'default'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

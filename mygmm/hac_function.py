@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""HAC covariance matrix estimator.
+"""
+HAC covariance matrix estimator
+-------------------------------
 
 HAC - Heteroscedasticity and Autocorrelation Consistent
+
 """
 from __future__ import division
 
@@ -11,7 +14,7 @@ from math import cos, sin, pi
 __all__ = ['hac']
 
 
-def hac(vectors, **kwargs):
+def hac(vectors, kernel='SU', band=None):
     """HAC estimator of the long-run variance matrix of u.
 
     Parameters
@@ -32,9 +35,8 @@ def hac(vectors, **kwargs):
 
     """
     length = vectors.shape[0]
-
-    options = {'kernel': 'SU', 'band': int(length**(1/3))}
-    options.update(kwargs)
+    if band is None:
+        band = int(length**(1/3))
 
     # Demean to improve covariance estimate in small samples
     # T x q
@@ -42,24 +44,24 @@ def hac(vectors, **kwargs):
     # q x q
     covar = vectors.T.dot(vectors) / length
 
-    for lag in range(options['band']):
+    for lag in range(band):
 
         # Some constants
-        a_coef = (lag+1)/(options['band']+1)
-        d_coef = (lag+1)/options['band']
+        a_coef = (lag+1)/(band+1)
+        d_coef = (lag+1)/band
         m_coef = 6*pi*d_coef/5
 
         # Serially Uncorrelated
-        if options['kernel'] == 'SU':
+        if kernel == 'SU':
             weight = 0
         # Newey West (1987)
-        elif options['kernel'] == 'Bartlett':
+        elif kernel == 'Bartlett':
             if a_coef <= 1:
                 weight = 1-a_coef
             else:
                 weight = 0
         # Gallant (1987)
-        elif options['kernel'] == 'Parzen':
+        elif kernel == 'Parzen':
             if a_coef <= .5:
                 weight = 1 - 6*d_coef**2 * (1-a_coef)
             elif a_coef <= 1:
@@ -67,7 +69,7 @@ def hac(vectors, **kwargs):
             else:
                 weight = 0
         # Andrews (1991)
-        elif options['kernel'] == 'Quadratic':
+        elif kernel == 'Quadratic':
             weight = 25 / (12*(d_coef*pi)**2) \
                 * (sin(m_coef)/m_coef - cos(m_coef))
 

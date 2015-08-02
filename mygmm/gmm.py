@@ -89,7 +89,6 @@ class GMM(object):
             nmoms = moment.shape[1]
             if nmoms - theta.size <= 0:
                 warnings.warn("Not enough degrees of freedom!")
-            nmoms = moment.shape[1]
             # Compute optimal weighting matrix
             # Only after the first step
             if i == 0:
@@ -99,8 +98,7 @@ class GMM(object):
 
             opt_out = minimize(self.__gmmobjective, theta,
                               args=(weight_mat, kwargs), method=method,
-                              jac=True, bounds=bounds,
-                              callback=self.callback)
+                              jac=True, bounds=bounds, callback=self.callback)
             # Update parameter for the next step
             theta = opt_out.x
 

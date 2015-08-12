@@ -75,6 +75,8 @@ def simulate_data():
     rho = .9
     # True parameter
     beta = np.array([1., -.5])
+    # Parameter names
+    names = ['alpha', 'beta']
     # True parameters for instruments
     gamma = np.array([1, -5, 2, 3, -1])
     # Random errors
@@ -94,17 +96,17 @@ def simulate_data():
     # Collect data for GMM
     data = {'Y': Y, 'X': X, 'Z': Z}
 
-    return data, beta
+    return data, beta, names
 
 
 def try_mygmm():
 
     options = {'iter': 2, 'bounds': None, 'method': 'L-BFGS-B'}
-    data, theta_true = simulate_data()
+    data, theta_true, names = simulate_data()
     # Initialize GMM object
     model = Model(data)
     # Estimate model with GMM
-    res_gmm = model.gmmest(theta_true*2, **options)
+    res_gmm = model.gmmest(theta_true*2, names=names, **options)
     # Print results
     print(res_gmm)
 

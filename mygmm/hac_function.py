@@ -14,7 +14,7 @@ from math import cos, sin, pi
 __all__ = ['hac']
 
 
-def hac(vectors, kernel='SU', band=None):
+def hac(vectors, kernel='SU', band=None, **kwargs):
     """HAC estimator of the long-run variance matrix of u.
 
     Parameters

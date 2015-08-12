@@ -8,9 +8,9 @@ GMM results class
 from __future__ import print_function, division
 
 import numpy as np
+import pandas as pd
 
 from scipy.stats import chi2
-from functools import partial
 
 __all__ = ['Results']
 
@@ -38,12 +38,14 @@ class Results(object):
 
     """
 
-    def __init__(self, opt_out=None, var_theta=None, nmoms=None):
+    def __init__(self, opt_out=None, var_theta=None, nmoms=None, names=None):
         """Initialize the class.
 
         """
         # Parameter estimate
         self.theta = opt_out.x
+        # Parameter names
+        self.names = names
         # Degrees of freedom
         self.degf = nmoms - self.theta.size
         # J-statistic
@@ -61,15 +63,15 @@ class Results(object):
         """Print results of the estimation.
 
         """
-        precision = 4
-        suppress = False
-        array_str = partial(np.array_str, precision=precision,
-                            suppress_small=suppress)
+        cols = {'theta': self.theta, 'std': self.stde, 'tstat': self.tstat}
+        res = pd.DataFrame(cols, index=self.names)[['theta', 'std', 'tstat']]
+        res_str = res.to_string(float_format=lambda x: '%.4f' % x)
+        width = len(res_str) // (res.shape[0] + 1)
         show = '-' * 60
-        show += '\nThe final results are'
-        show += '\ntheta   = ' + array_str(self.theta)
-        show += '\ns.e.    = ' + array_str(self.stde)
-        show += '\nt-stat  = ' + array_str(self.tstat)
+        show += '\nGMM final results:\n'
+        show += width * '-' + '\n'
+        show += res_str
+        show += '\n' + width * '-'
         show += '\nJ-stat  = %0.2f' % self.jstat
         show += '\ndf      = ' + str(self.degf)
         show += '\np-value = %0.2f' % self.jpval

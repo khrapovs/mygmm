@@ -43,6 +43,7 @@ class GMM(object):
         Parameters
         ----------
         momcond : function
+
             Moment function. Should return:
 
                 - array (nobs x nmoms)
@@ -55,7 +56,7 @@ class GMM(object):
         self.momcond = momcond
 
     def gmmest(self, theta_start, bounds=None, iter=2, method='BFGS',
-               kernel='Bartlett', band=None, **kwargs):
+               kernel='Bartlett', band=None, names=None, **kwargs):
         """Multiple step GMM estimation procedure.
 
         Parameters
@@ -71,8 +72,10 @@ class GMM(object):
         kernel : str
             Type of kernel for HAC.
             Currenly implemented: SU, Bartlett, Parzen, Quadratic
-        band: int
+        band : int
             Truncation parameter for HAC
+        names : list of str
+            Parameter names
 
         Returns
         -------
@@ -97,14 +100,15 @@ class GMM(object):
                 weight_mat = self.__weights(moment, kernel=kernel, band=band)
 
             opt_out = minimize(self.__gmmobjective, theta,
-                              args=(weight_mat, kwargs), method=method,
-                              jac=True, bounds=bounds, callback=self.callback)
+                               args=(weight_mat, kwargs), method=method,
+                               jac=True, bounds=bounds, callback=self.callback)
             # Update parameter for the next step
             theta = opt_out.x
 
         var_theta = self.varest(theta, **kwargs)
 
-        return Results(opt_out=opt_out, var_theta=var_theta, nmoms=nmoms)
+        return Results(opt_out=opt_out, var_theta=var_theta,
+                       nmoms=nmoms, names=names)
 
     def callback(self, theta):
         """Callback function. Prints at each optimization iteration.

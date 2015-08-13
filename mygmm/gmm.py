@@ -55,8 +55,9 @@ class GMM(object):
         # Moment conditions
         self.momcond = momcond
 
-    def gmmest(self, theta_start, bounds=None, iter=2, method='BFGS',
-               kernel='Bartlett', band=None, names=None, **kwargs):
+    def gmmest(self, theta_start, bounds=None, constraints=(),
+               iter=2, method='BFGS', kernel='Bartlett',
+               band=None, names=None, **kwargs):
         """Multiple step GMM estimation procedure.
 
         Parameters
@@ -65,6 +66,8 @@ class GMM(object):
             Initial parameters
         bounds : list of tuples
             Bounds on parameters
+        constraints : dict or sequence of dict
+            Equality and inequality constraints. See scipy.optimize.minimize
         iter : int
             Number of GMM steps
         method : str
@@ -100,8 +103,11 @@ class GMM(object):
                 weight_mat = self.__weights(moment, kernel=kernel, band=band)
 
             opt_out = minimize(self.__gmmobjective, theta,
-                               args=(weight_mat, kwargs), method=method,
-                               jac=True, bounds=bounds, callback=self.callback)
+                               args=(weight_mat, kwargs),
+                               method=method,
+                               jac=True, bounds=bounds,
+                               constraints=constraints,
+                               callback=self.callback)
             # Update parameter for the next step
             theta = opt_out.x
 

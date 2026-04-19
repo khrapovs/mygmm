@@ -31,6 +31,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "numdifftools" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "scipy" },
     { name = "scipy-stubs" },
@@ -44,6 +45,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "numdifftools", specifier = ">=0.9.42" },
+    { name = "numpy", specifier = ">=2.4.4" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "scipy-stubs", specifier = "~=1.17.1" },

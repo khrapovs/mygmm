@@ -5,6 +5,7 @@
 """
 import numpy as np
 import pandas as pd
+from statsmodels.regression.linear_model import OLS
 
 from mygmm import GMM
 
@@ -70,7 +71,7 @@ def simulate_data():
 
     """
     # Number of observations
-    T = 1e3
+    T = int(1e3)
     # Correlation
     rho = .9
     # True parameter
@@ -113,15 +114,14 @@ def try_mygmm():
     # Compare with OLS
     df = pd.DataFrame(data['X'], columns=['X1', 'X2'])
     df['Y'] = data['Y']
-    res = pd.ols(y=df['Y'], x=df[['X1', 'X2']], intercept=False)
+    model = OLS(df['Y'], exog=df[['X1', 'X2']], hasconst=False)
+    results = model.fit()
 
     print('\nOLS results')
-    print(np.array(res.beta))
-    print(np.array(res.t_stat))
+    print(results.summary())
 
     return res_gmm
 
 
 if __name__ == '__main__':
-
-    res = try_mygmm()
+    try_mygmm()

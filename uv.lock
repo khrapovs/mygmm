@@ -34,13 +34,13 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "scipy" },
-    { name = "scipy-stubs" },
     { name = "statsmodels" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "scipy-stubs" },
 ]
 
 [package.metadata]
@@ -49,12 +49,14 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.4" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "scipy", specifier = ">=1.17.1" },
-    { name = "scipy-stubs", specifier = "~=1.17.1" },
     { name = "statsmodels", specifier = ">=0.14.6" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.0.3" }]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "scipy-stubs", specifier = "~=1.17.1" },
+]
 
 [[package]]
 name = "numdifftools"

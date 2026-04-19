@@ -1,6 +1,5 @@
 import numpy as np
 from statsmodels.sandbox.regression.gmm import GMM
-import matplotlib.pylab as plt
 
 def generate_data():
     # Number of observations
@@ -23,9 +22,6 @@ def generate_data():
     Y = np.dot(X, beta) + e[:,0] + rho * e[:,1]
     
     print(X.shape, Y.shape)
-    
-    plt.scatter(X[:,0], Y)
-    plt.show()
     
     return Y, X, Z
 

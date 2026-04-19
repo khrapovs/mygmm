@@ -1,6 +1,5 @@
 [project]
 name = "mygmm"
-version = "0.1.0"
 description = "My own implementation of the GMM estimator for educational purposes"
 authors = [{ name = "Stanislav Khrapov", email = "khrapovs@gmail.com" }]
 readme = "README.md"
@@ -12,6 +11,7 @@ dependencies = [
     "scipy>=1.17.1",
     "statsmodels>=0.14.6",
 ]
+dynamic = ["version"]
 
 [dependency-groups]
 dev = [
@@ -20,5 +20,11 @@ dev = [
 ]
 
 [build-system]
-requires = ["uv_build>=0.11.7,<0.12"]
-build-backend = "uv_build"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+fallback-version = "0.0.0"

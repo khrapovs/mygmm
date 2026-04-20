@@ -28,3 +28,9 @@ source = "uv-dynamic-versioning"
 
 [tool.uv-dynamic-versioning]
 fallback-version = "0.0.0"
+
+[tool.commitizen]
+version_scheme = "semver"
+version_provider = "scm"
+update_changelog_on_bump = true
+

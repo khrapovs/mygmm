@@ -33,3 +33,4 @@ fallback-version = "0.0.0"
 version_scheme = "semver"
 version_provider = "scm"
 update_changelog_on_bump = true
+tag_format = "v$version"
